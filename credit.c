@@ -19,13 +19,13 @@ void drawCredit()
     setCursorPos(10, 3);  printf("           CREDIT               ");
     setCursorPos(10, 4);  printf("================================");
 
-    setCursorPos(10, 6);  printf("  게임 제목  :  ");
+    setCursorPos(10, 6);  printf("  게임 제목  :  CODE_BLUE");
     setCursorPos(10, 7);  printf("  버전       :  v1.0");
     setCursorPos(10, 8);  printf("  개발 일자  :  2026.05.25");
 
-    setCursorPos(10, 10); printf("  기획 / 개발      홍길동");
-    setCursorPos(10, 11); printf("  그래픽           홍길동");
-    setCursorPos(10, 12); printf("  사운드           홍길동");
+    setCursorPos(10, 10); printf("  기획 / 개발      박지유, 조은서, 신주연");
+    setCursorPos(10, 11); printf("  그래픽           오유선");
+    setCursorPos(10, 12); printf("  사운드           오유선");
 
     setCursorPos(10, 14); printf("  Special Thanks");
     setCursorPos(10, 15); printf("    -");
