@@ -1,4 +1,4 @@
-// HUD_DEATH - 사망/부활 담당
+// COMBAT_DEATH - 사망/부활 담당
 // 즉사 또는 체크포인트 부활 (난이도 연동)
 
 #include <stdio.h>
