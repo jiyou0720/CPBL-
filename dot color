@@ -1,0 +1,101 @@
+// HUD_COLOR - ASCII 색상 담당
+// 윈도우 콘솔 COLOR_PAIR 방식, 최대 256색 조합 (전경 16 x 배경 16)
+
+#include <stdio.h>
+#include <Windows.h>
+
+// 전경색 (글자색) 인덱스
+#define FG_BLACK         0
+#define FG_DARK_BLUE     1
+#define FG_DARK_GREEN    2
+#define FG_DARK_CYAN     3
+#define FG_DARK_RED      4
+#define FG_DARK_MAGENTA  5
+#define FG_DARK_YELLOW   6
+#define FG_GRAY          7
+#define FG_DARK_GRAY     8
+#define FG_BLUE          9
+#define FG_GREEN         10
+#define FG_CYAN          11
+#define FG_RED           12
+#define FG_MAGENTA       13
+#define FG_YELLOW        14
+#define FG_WHITE         15
+
+// 배경색 인덱스 (앞에 BG_ 붙이고 4비트 시프트)
+#define BG_BLACK         (0  << 4)
+#define BG_DARK_BLUE     (1  << 4)
+#define BG_DARK_GREEN    (2  << 4)
+#define BG_DARK_CYAN     (3  << 4)
+#define BG_DARK_RED      (4  << 4)
+#define BG_DARK_MAGENTA  (5  << 4)
+#define BG_DARK_YELLOW   (6  << 4)
+#define BG_GRAY          (7  << 4)
+#define BG_DARK_GRAY     (8  << 4)
+#define BG_BLUE          (9  << 4)
+#define BG_GREEN         (10 << 4)
+#define BG_CYAN          (11 << 4)
+#define BG_RED           (12 << 4)
+#define BG_MAGENTA       (13 << 4)
+#define BG_YELLOW        (14 << 4)
+#define BG_WHITE         (15 << 4)
+
+// COLOR_PAIR: 전경 + 배경
+#define COLOR_PAIR(fg, bg) ((bg) | (fg))
+
+static HANDLE hConsole;
+
+void color_init()
+{
+    hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+}
+
+// 색상 적용
+void color_set(int pair)
+{
+    SetConsoleTextAttribute(hConsole, (WORD)pair);
+}
+
+// 색상 초기화 (흰 글자 검정 배경)
+void color_reset()
+{
+    SetConsoleTextAttribute(hConsole, COLOR_PAIR(FG_WHITE, BG_BLACK));
+}
+
+void setCursorPos(int x, int y)
+{
+    COORD pos = { x, y };
+    SetConsoleCursorPosition(hConsole, pos);
+}
+
+// 사용 예시
+int main()
+{
+    color_init();
+    setCursorPos(0, 0);
+
+    // 플레이어 - 밝은 녹색 글자
+    color_set(COLOR_PAIR(FG_GREEN, BG_BLACK));
+    printf("P = 플레이어\n");
+
+    // 적 - 빨간 글자
+    color_set(COLOR_PAIR(FG_RED, BG_BLACK));
+    printf("E = 적\n");
+
+    // 함정 - 노란 글자
+    color_set(COLOR_PAIR(FG_YELLOW, BG_BLACK));
+    printf("^ = 함정\n");
+
+    // 아이템 - 하늘색 글자
+    color_set(COLOR_PAIR(FG_CYAN, BG_BLACK));
+    printf("I = 아이템\n");
+
+    // 경고 - 빨간 배경 흰 글자
+    color_set(COLOR_PAIR(FG_WHITE, BG_RED));
+    printf("!! 위험 !!");
+
+    color_reset();
+    printf("\n");
+
+    return 0;
+}
