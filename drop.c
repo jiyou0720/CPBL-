@@ -1,3 +1,6 @@
+// CTRL_DROP - 내려놓기
+// 필수 | Q키: 손 아이템 현재 위치 드롭(I 타일 표시)
+
 #include <stdio.h>
 #include <Windows.h>
 #include <conio.h>
