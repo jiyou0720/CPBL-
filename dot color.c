@@ -1,4 +1,4 @@
-// HUD_COLOR - ASCII 색상 담당
+// MISC_ART - 도트 그래픽
 // 윈도우 콘솔 COLOR_PAIR 방식, 최대 256색 조합 (전경 16 x 배경 16)
 //SetConsoleTextAttribute으로 색 처리함.
 
