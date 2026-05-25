@@ -6,7 +6,7 @@
 #include <conio.h>
 
 // 게임 오버 원인
-#define GAMEOVER_HP   0  // HP 0
+#define GAMEOVER_HP    0  // HP 0
 #define GAMEOVER_TIME 1  // 시간 초과
 
 // 메뉴 선택지
@@ -35,23 +35,34 @@ int showGameOver(int cause)
         else
             printf("시간이 초과되었습니다.");
 
-        // 게임 오버 타이틀
-        setCursorPos(10, 5);  printf("   ██████╗  █████╗ ███╗   ███╗███████╗");
-        setCursorPos(10, 6);  printf("  ██╔════╝ ██╔══██╗████╗ ████║██╔════╝");
-        setCursorPos(10, 7);  printf("  ██║  ███╗███████║██╔████╔██║█████╗  ");
-        setCursorPos(10, 8);  printf("  ██║   ██║██╔══██║██║╚██╔╝██║██╔══╝  ");
-        setCursorPos(10, 9);  printf("  ╚██████╔╝██║  ██║██║ ╚═╝ ██║███████╗");
-        setCursorPos(10, 10); printf("   ╚═════╝ ╚═╝  ╚═╝╚═╝     ╚═╝╚══════╝");
-        setCursorPos(10, 11); printf("              O V E R                  ");
+        // 게임 오버 타이틀 (한글 "게임" 아스키 아트 + O V E R)
+        setCursorPos(10, 5);  printf("⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣀⣠⡀⠀");
+        setCursorPos(10, 6);  printf("⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣤⣤⠀⠀⠀⢀⣴⣿⡶⠀⣾⣿⣿⡿⠟⠛⠁");
+        setCursorPos(10, 7);  printf("⠀⠀⠀⠀⠀⠀⣀⣀⣄⣀⠀⠀⠀⠀⣶⣶⣦⠀⠀⠀⠀⣼⣿⣿⡇⠀⣠⣿⣿⣿⠇⣸⣿⣿⣧⣤⠀⠀⠀");
+        setCursorPos(10, 8);  printf("⠀⠀⢀⣴⣾⣿⡿⠿⠿⠿⠇⠀⠀⣸⣿⣿⣿⡆⠀⠀⢰⣿⣿⣿⣷⣼⣿⣿⣿⡿⢀⣿⣿⡿⠟⠛⠁⠀⠀");
+        setCursorPos(10, 9);  printf("⠀⣴⣿⡿⠋⠁⠀⠀⠀⠀⠀⠀⢠⣿⣿⣹⣿⣿⣿⣿⣿⣿⡏⢻⣿⣿⢿⣿⣿⠃⣼⣿⣯⣤⣴⣶⣿⡤⠀");
+        setCursorPos(10, 10); printf("⣼⣿⠏⠀⣀⣠⣤⣶⣾⣷⠄⣰⣿⣿⡿⠿⠻⣿⣯⣸⣿⡿⠀⠀⠀⠁⣾⣿⡏⢠⣿⣿⠿⠛⠋⠉⠀⠀⠀");
+        setCursorPos(10, 11); printf("⣿⣿⠲⢿⣿⣿⣿⣿⡿⠋⢰⣿⣿⠋⠀⠀⠀⢻⣿⣿⣿⠇⠀⠀⠀⠀⠙⠛⠀⠀⠉⠁⠀⠀⠀⠀⠀⠀⠀");
+        setCursorPos(10, 12); printf("⠹⢿⣷⣶⣿⣿⠿⠋⠀⠀⠈⠙⠃⠀⠀⠀⠀⠀⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀");
+        setCursorPos(10, 13); printf("⠀⠀⠈⠉⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣀⣤⣤⣴⣶⣦⣤⡀⠀");
+        setCursorPos(10, 14); printf("⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣀⡀⠀⠀⠀⠀⠀⠀⠀⣠⡇⢰⣶⣶⣾⡿⠷⣿⣿⣿⡟⠛⣉⣿⣿⣿⠆");
+        setCursorPos(10, 15); printf("⠀⠀⠀⠀⠀⠀⢀⣤⣶⣿⣿⡎⣿⣿⣦⠀⠀⠀⢀⣤⣾⠟⢀⣿⣿⡟⣁⠀⠀⣸⣿⣿⣤⣾⣿⡿⠛⠁⠀");
+        setCursorPos(10, 16); printf("⠀⠀⠀⠀⣠⣾⣿⡿⠛⠉⢿⣦⠘⣿⣿⡆⠀⢠⣾⣿⠋⠀⣼⣿⣿⣿⠿⠷⢠⣿⣿⣿⠿⢻⣿⣧⠀⠀⠀");
+        setCursorPos(10, 17); printf("⠀⠀⠀⣴⣿⣿⠋⠀⠀⠀⢸⣿⣇⢹⣿⣷⣰⣿⣿⠃⠀⢠⣿⣿⢃⣀⣤⣤⣾⣿⡟⠀⠀⠀⢻⣿⣆⠀⠀");
+        setCursorPos(10, 18); printf("⠀⠀⠀⣿⣿⡇⠀⠀⢀⣴⣿⣿⡟⠀⣿⣿⣿⣿⠃⠀⠀⣾⣿⣿⡿⠿⠛⢛⣿⡟⠀⠀⠀⠀⠀⠻⠿⠀⠀");
+        setCursorPos(10, 19); printf("⠀⠀⠀⠹⣿⣿⣶⣾⣿⣿⣿⠟⠁⠀⠸⢿⣿⠇⠀⠀⠀⠛⠛⠁⠀⠀⠀⠀⠀⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀");
+        setCursorPos(10, 20); printf("⠀⠀⠀⠀⠈⠙⠛⠛⠛⠋⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀");
+        setCursorPos(10, 21); printf("                             O V E R                                  ");
         
 
-        // 메뉴 선택지 (현재 선택된 항목에 > 표시)
-        setCursorPos(14, 14);
+        // 메뉴 선택지 (겹치지 않도록 Y 좌표를 23, 24로 수정)
+        setCursorPos(14, 23);
         printf("%s 재시작", selected == MENU_RESTART ? ">" : " ");
-        setCursorPos(14, 15);
+        setCursorPos(14, 24);
         printf("%s 타이틀로 돌아가기", selected == MENU_TITLE ? ">" : " ");
 
-        setCursorPos(10, 17); printf("방향키: 선택   Enter: 확인");
+        // 안내 메시지 (Y 좌표를 26으로 수정)
+        setCursorPos(10, 26); printf("방향키: 선택   Enter: 확인");
 
         // 입력 처리 (방향키는 두 바이트)
         key = _getch();
@@ -77,9 +88,9 @@ int main()
     system("cls");
     setCursorPos(0, 0);
     if (result == MENU_RESTART)
-        printf("재시작 선택됨 -> 게임 재시작 처리");
+        printf("재시작 선택됨 -> 게임 재시작 처리\n");
     else
-        printf("타이틀 선택됨 -> 타이틀 화면으로 이동");
+        printf("타이틀 선택됨 -> 타이틀 화면으로 이동\n");
 
     _getch();
     return 0;
