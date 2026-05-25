@@ -1,4 +1,4 @@
-// HUD_NOTE - 메모/노트 담당
+// NOTE_VIEW - 메모/노트 담당
 // N키 목록, 방향키 선택, Enter 읽기 (읽은 메모 표시)
 
 #include <stdio.h>
