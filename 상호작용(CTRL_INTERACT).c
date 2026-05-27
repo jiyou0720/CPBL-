@@ -1,3 +1,5 @@
+// 필수 | F키: 아이템 줍기, NPC 대화, 퍼즐 활성화(오브젝트 검사→단서 출력)
+
 #define _CRT_SECURE_NO_WARNINGS
 #include <stdio.h>
 #include <time.h>
