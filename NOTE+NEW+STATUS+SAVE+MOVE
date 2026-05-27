@@ -1,0 +1,1008 @@
+#define _CRT_SECURE_NO_WARNINGS
+
+#include <stdio.h>
+#include <string.h>
+#include <windows.h>
+#include <conio.h>
+#include <ctype.h>
+#include <stdlib.h>
+#include <time.h>
+
+#define MAX_ITEMS 5               // 인벤토리 개수 최대 5개 제한
+#define MAP_WIDTH 50
+#define MAP_HEIGHT 15
+#define MAX_FLOORS 2 
+#define NUM_SLOTS 3 
+#define NUM_ROOMS_PER_FLOOR 12
+#define MAX_JOURNALS 15
+#define NUM_ACHIEVEMENTS 11
+#define MAX_HEAL_ITEMS 3
+#define MAX_DROPPED_ITEMS 20
+
+// ==========================
+// Structures
+// ==========================
+typedef struct {
+    int floor;
+    int x;
+    int y;
+    int isSpawned;
+} HealItem;
+
+typedef struct {
+    int floor;
+    int x;
+    int y;
+    char name[30];
+    int isActive; // 1: 바닥에 떨어져 있음, 0: 없음
+} DroppedItem;
+
+typedef struct
+{
+    int hp;
+    int maxHp;
+    int x;
+    int y;
+    int floor;
+    char roomName[50];
+
+    // 인벤토리 및 장착 시스템
+    char items[MAX_ITEMS][30];
+    char holdingItem[30]; // 현재 손에 들고 있는 아이템 (없으면 "None")
+
+    int visitedRooms[MAX_FLOORS][NUM_ROOMS_PER_FLOOR];
+    int collectedJournals[MAX_JOURNALS];
+
+    // --- Achievement Tracking Variables ---
+    int achievements[NUM_ACHIEVEMENTS];
+    int ghostAvoidStreak;
+    int saveMenuOpenCount;
+    int trapTriggerCount;
+    int totalPuzzleFailures;
+    int puzzleFirstTryFailed;
+    int caughtByButlerCount;
+
+    // --- Dynamic Item Placement ---
+    HealItem healSpots[MAX_HEAL_ITEMS];
+    DroppedItem droppedItems[MAX_DROPPED_ITEMS];
+} Player;
+
+typedef struct
+{
+    int slotExists[NUM_SLOTS];
+    Player playerData[NUM_SLOTS];
+} SaveData;
+
+// Global Variables
+int currentSlot = 1;
+SaveData globalSave;
+
+// Achievement Names & Descriptions
+const char* achNames[NUM_ACHIEVEMENTS] = {
+    "The Ghost Whisperer", "The Ultimate Truth", "What a Shame to Die!",
+    "The Sole Survivor", "Are You a Reincarnated Soul?", "Chicken?",
+    "Haha! Caught in a Trap!", "It's Okay, Practice Makes Perfect",
+    "Are You a Puzzle Master?", "The Invisible Man", "Irresistible Temptation"
+};
+
+const char* achDescs[NUM_ACHIEVEMENTS] = {
+    "Survived 10 ghost encounters in a row without losing HP.",
+    "Discovered all 15 hidden journal entries.",
+    "Witnessed the tragic demise of the investigator (Bad Ending 1).",
+    "Successfully broke the seals and escaped the mansion (Happy Ending).",
+    "Healed yourself while clinging to life with exactly 1 HP.",
+    "Accessed the save management checkpoint menu 5 or more times.",
+    "Stepped into hidden floor traps 5 or more times.",
+    "Failed to solve mansion puzzles 5 or more times.",
+    "Cleared all puzzles encountered on the very first attempt.",
+    "Completed objectives without being spotted by the Butler.",
+    "Gave in to the whispers and transformed into a ghost (Bad Ending 2)."
+};
+
+// [추가] 사용인 일지 (영문 버전) (15개)
+const char* journalTexts[MAX_JOURNALS] = {
+    "Journal Log #1: The mansion feels unusually cold today.",
+    "Journal Log #2: I heard footsteps coming from the empty hallway.",
+    "Journal Log #3: The master bedroom contains a strange locked box.",
+    "Journal Log #4: Shadows seem to move when I blink.",
+    "Journal Log #5: A strange ritual was performed here long ago.",
+    "Journal Log #6: The butler knows more than he lets on.",
+    "Journal Log #7: Don't look back when the temperature drops.",
+    "Journal Log #8: The stone dials respond to mathematical rules.",
+    "Journal Log #9: The seal on the second floor is cracking.",
+    "Journal Log #10: One of us didn't make it out last time.",
+    "Journal Log #11: The basement whispers names I used to know.",
+    "Journal Log #12: Elixirs are hidden in old containers.",
+    "Journal Log #13: Spikes are hidden under the wooden tiles.",
+    "Journal Log #14: The curse spreads to anyone who stays past midnight.",
+    "Journal Log #15: Escape is impossible unless all seals are broken."
+};
+
+// Journal Locations
+typedef struct { int floor; int x; int y; } JournalLocation;
+JournalLocation journalLocs[MAX_JOURNALS] = {
+    {1, 2, 2}, {1, 20, 5}, {1, 45, 2}, {1, 5, 12}, {1, 25, 10},
+    {2, 10, 5}, {2, 2, 2}, {2, 38, 5}, {2, 45, 8}, {2, 5, 12},
+    {1, 40, 12}, {1, 2, 9}, {2, 45, 2}, {2, 2, 8}, {2, 40, 12}
+};
+
+JournalLocation itemCandidateLocs[10] = {
+    {1, 2, 12}, {1, 45, 5}, {1, 5, 6}, {1, 11, 9}, {1, 40, 11},
+    {2, 3, 2},  {2, 12, 6}, {2, 36, 5}, {2, 46, 3}, {2, 5, 12}
+};
+
+// 임시 맵 구성
+char map[MAX_FLOORS][MAP_HEIGHT][MAP_WIDTH + 1] = {
+    {
+        "##################################################",
+        "# BED1        #      STAIRS      #      BED2      #",
+        "#             #                  #                #",
+        "#             .                  .                #",
+        "#######.#######                  ##########.#######",
+        "#STOR # BATH #                  # BATH # SMALL #",
+        "#     #      .                  .      #       #",
+        "########.######                  #######.##########",
+        "# DRESSROOM   #                  # SERVANT ROOM #",
+        "#             .                  .              #",
+        "#######.#######                  #######.##########",
+        "# MASTER ROOM #                  #   TERRACE    #",
+        "#             .                  .              #",
+        "#             #                  #              #",
+        "##################################################"
+    },
+    {
+        "##################################################",
+        "# 2F_BED1     #     2F_STAIRS    #     2F_BED2    #",
+        "#             #                  #                #",
+        "#             .                  .                #",
+        "#######.#######                  ##########.#######",
+        "#OFFIC# LIBRARY#                  # LAB  # ART   #",
+        "#     #      .                  .      #       #",
+        "########.######                  #######.##########",
+        "# GALLERY     #                  # CORRIDOR     #",
+        "#             .                  .              #",
+        "#######.#######                  #######.##########",
+        "# ATTIC ROOM  #                  #   BALCONY    #",
+        "#             .                  .              #",
+        "#             #                  #              #",
+        "##################################################"
+    }
+};
+
+// Forward Declarations
+void drawMap(Player* p);
+void drawUI(Player* p);
+void saveToSlot(Player* p, int slotIdx);
+void showMainMenu(Player* p);
+
+// ==========================
+// Utilities
+// ==========================
+void gotoxy(int x, int y) {
+    COORD pos = { (SHORT)x, (SHORT)y };
+    SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), pos);
+}
+
+void hideCursor() {
+    CONSOLE_CURSOR_INFO cursorInfo;
+    cursorInfo.dwSize = 1;
+    cursorInfo.bVisible = FALSE;
+    SetConsoleCursorInfo(GetStdHandle(STD_OUTPUT_HANDLE), &cursorInfo);
+}
+
+void loadSaveDatFile() {
+    FILE* fp = fopen("save.dat", "rb");
+    if (fp == NULL) {
+        memset(&globalSave, 0, sizeof(SaveData));
+        return;
+    }
+    fread(&globalSave, sizeof(SaveData), 1, fp);
+    fclose(fp);
+}
+
+void writeSaveDatFile() {
+    FILE* fp = fopen("save.dat", "wb");
+    if (fp == NULL) return;
+    fwrite(&globalSave, sizeof(SaveData), 1, fp);
+    fclose(fp);
+}
+
+void saveToSlot(Player* p, int slotIdx) {
+    int idx = slotIdx - 1;
+    globalSave.slotExists[idx] = 1;
+    globalSave.playerData[idx] = *p;
+    writeSaveDatFile();
+}
+
+void unlockAchievement(Player* p, int achIdx) {
+    if (p->achievements[achIdx] == 0) {
+        p->achievements[achIdx] = 1;
+        saveToSlot(p, currentSlot);
+        gotoxy(0, MAP_HEIGHT + 13);
+        printf("[🏆 ACHIEVEMENT UNLOCKED!] -> %s       \n", achNames[achIdx]);
+        Sleep(1500);
+    }
+}
+
+void randomizeHealItems(Player* p) {
+    int chosen[10] = { 0 };
+    int count = 0;
+    while (count < MAX_HEAL_ITEMS) {
+        int r = rand() % 10;
+        if (chosen[r] == 0) {
+            chosen[r] = 1;
+            p->healSpots[count].floor = itemCandidateLocs[r].floor;
+            p->healSpots[count].x = itemCandidateLocs[r].x;
+            p->healSpots[count].y = itemCandidateLocs[r].y;
+            p->healSpots[count].isSpawned = 1;
+            count++;
+        }
+    }
+}
+
+// ==========================
+// 인벤토리 아이템 사용 로직
+// ==========================
+void useElixirItem(Player* p) {
+    if (p->hp == 1) {
+        unlockAchievement(p, 4);
+    }
+    p->hp += 30;
+    if (p->hp > p->maxHp) p->hp = p->maxHp;
+
+    gotoxy(0, MAP_HEIGHT + 9);
+    printf("[+ HEAL] Consumed an Elixir from inventory. (+30 HP)       \n");
+    Sleep(1200);
+}
+
+// ==========================
+// 아이템 줍기 전용 시스템 (E 키)
+// ==========================
+void executeLootItem(Player* p) {
+    int actionTaken = 0;
+
+    // 1. 바닥에 떨어진 아이템(*)이 있는지 확인
+    for (int i = 0; i < MAX_DROPPED_ITEMS; i++) {
+        if (p->droppedItems[i].isActive && p->floor == p->droppedItems[i].floor && p->x == p->droppedItems[i].x && p->y == p->droppedItems[i].y) {
+
+            // 인벤토리 최대 5개 한도 빈 슬롯 찾기
+            int invIdx = -1;
+            for (int j = 0; j < MAX_ITEMS; j++) {
+                if (strcmp(p->items[j], "Empty") == 0 || strlen(p->items[j]) == 0) {
+                    invIdx = j;
+                    break;
+                }
+            }
+
+            if (invIdx != -1) {
+                strcpy(p->items[invIdx], p->droppedItems[i].name);
+                p->droppedItems[i].isActive = 0;
+                gotoxy(0, MAP_HEIGHT + 9);
+                printf("[🎒 LOOT] Picked up dropped [%s] into inventory.          \n", p->items[invIdx]);
+                actionTaken = 1;
+                saveToSlot(p, currentSlot);
+                Sleep(1200);
+            }
+            else {
+                gotoxy(0, MAP_HEIGHT + 9);
+                printf("[❌ FULL] Inventory full! Cannot carry more than 5 items. \n");
+                actionTaken = 1;
+                Sleep(1200);
+            }
+            break;
+        }
+    }
+
+    if (actionTaken) return;
+
+    // 2. 맵에 무작위 스폰된 HP 회복약 확인
+    for (int i = 0; i < MAX_HEAL_ITEMS; i++) {
+        if (p->healSpots[i].isSpawned && p->floor == p->healSpots[i].floor && p->x == p->healSpots[i].x && p->y == p->healSpots[i].y) {
+
+            int invIdx = -1;
+            for (int j = 0; j < MAX_ITEMS; j++) {
+                if (strcmp(p->items[j], "Empty") == 0 || strlen(p->items[j]) == 0) {
+                    invIdx = j;
+                    break;
+                }
+            }
+
+            if (invIdx != -1) {
+                p->healSpots[i].isSpawned = 0;
+                strcpy(p->items[invIdx], "Elixir");
+                gotoxy(0, MAP_HEIGHT + 9);
+                printf("[🎒 LOOT] Found and stored an [Elixir] in inventory!          \n");
+                actionTaken = 1;
+                saveToSlot(p, currentSlot);
+                Sleep(1200);
+            }
+            else {
+                gotoxy(0, MAP_HEIGHT + 9);
+                printf("[❌ FULL] Found an Elixir, but your inventory is full (5/5)!   \n");
+                actionTaken = 1;
+                Sleep(1200);
+            }
+            break;
+        }
+    }
+
+    if (!actionTaken) {
+        gotoxy(0, MAP_HEIGHT + 9);
+        printf("[👀 EXAMINE] You searched around carefully, but nothing is here.     \n");
+        Sleep(1000);
+    }
+}
+
+// ==========================
+// 손에 든 아이템 바닥에 버리기 (G 키)
+// ==========================
+void executeDropItem(Player* p) {
+    if (strcmp(p->holdingItem, "None") == 0 || strlen(p->holdingItem) == 0) {
+        gotoxy(0, MAP_HEIGHT + 9);
+        printf("[⚠️ DROP] You are not holding any item in your hands to drop!     \n");
+        Sleep(1200);
+        return;
+    }
+
+    int dropIdx = -1;
+    for (int d = 0; d < MAX_DROPPED_ITEMS; d++) {
+        if (!p->droppedItems[d].isActive) {
+            dropIdx = d;
+            break;
+        }
+    }
+
+    if (dropIdx != -1) {
+        p->droppedItems[dropIdx].floor = p->floor;
+        p->droppedItems[dropIdx].x = p->x;
+        p->droppedItems[dropIdx].y = p->y;
+        strcpy(p->droppedItems[dropIdx].name, p->holdingItem);
+        p->droppedItems[dropIdx].isActive = 1;
+
+        for (int i = 0; i < MAX_ITEMS; i++) {
+            if (strcmp(p->items[i], p->holdingItem) == 0) {
+                strcpy(p->items[i], "Empty");
+                break;
+            }
+        }
+
+        gotoxy(0, MAP_HEIGHT + 9);
+        printf("[🗑️ DROP] Dropped [%s] onto the floor tile.                     \n", p->holdingItem);
+
+        strcpy(p->holdingItem, "None");
+        saveToSlot(p, currentSlot);
+        Sleep(1200);
+    }
+    else {
+        gotoxy(0, MAP_HEIGHT + 9);
+        printf("[❌ ERROR] Floor is too full to drop any more items!            \n");
+        Sleep(1200);
+    }
+}
+
+// ==========================
+// 인벤토리 창 열기 (I 키)
+// ==========================
+void showInventoryMenu(Player* p) {
+    while (1) {
+        system("cls");
+        printf("==================================================\n");
+        printf("            INVENTORY (Max Capacity: 5)           \n");
+        printf("==================================================\n");
+        printf("  👉 Currently Holding: [ %s ]\n", p->holdingItem);
+        printf("--------------------------------------------------\n");
+
+        for (int i = 0; i < MAX_ITEMS; i++) {
+            if (strlen(p->items[i]) > 0 && strcmp(p->items[i], "Empty") != 0) {
+                printf("  [%d] %s\n", i + 1, p->items[i]);
+            }
+            else {
+                printf("  [%d] (Empty Slot)\n", i + 1);
+            }
+        }
+        printf("==================================================\n");
+        printf(" Select Slot [1-5] to Hold/Use, or [B] to return: ");
+
+        char ch = _getch();
+        if (tolower(ch) == 'b') break;
+        if (ch >= '1' && ch <= '5') {
+            int idx = ch - '1';
+            if (strlen(p->items[idx]) == 0 || strcmp(p->items[idx], "Empty") == 0) {
+                printf("\n Selected slot is empty!\n");
+                Sleep(800);
+                continue;
+            }
+
+            printf("\n\n [ Selected: %s ]\n", p->items[idx]);
+            printf(" 1. Hold (손에 들기)   2. Use (아이템 사용)   3. Cancel\n");
+            printf(" Choice: ");
+
+            char action = _getch();
+            if (action == '1') {
+                strcpy(p->holdingItem, p->items[idx]);
+                printf("\n Stored into your hand: %s\n", p->holdingItem);
+                saveToSlot(p, currentSlot);
+                Sleep(1000);
+                break;
+            }
+            else if (action == '2') {
+                if (strcmp(p->items[idx], "Elixir") == 0) {
+                    if (strcmp(p->holdingItem, p->items[idx]) == 0) {
+                        strcpy(p->holdingItem, "None");
+                    }
+                    useElixirItem(p);
+                    strcpy(p->items[idx], "Empty");
+                    saveToSlot(p, currentSlot);
+                    break;
+                }
+                else {
+                    printf("\n This item cannot be consumed right now.\n");
+                    Sleep(1000);
+                }
+            }
+        }
+    }
+    system("cls"); drawMap(p); drawUI(p);
+}
+
+// ==========================
+// Dynamic Puzzle Event Trigger
+// ==========================
+void triggerMansionPuzzle(Player* p) {
+    system("cls");
+    printf("==================================================\n");
+    printf("          [PUZZLE] THE SEALED STONE DIAL          \n");
+    printf("==================================================\n");
+    printf(" A sequence is engraved: 2 -> 4 -> 8 -> 16 -> ?\n");
+    printf(" Enter the next matching integer value: ");
+
+    int attempt = 0;
+    while (1) {
+        int ans = 0;
+        if (scanf("%d", &ans) != 1) {
+            while (getchar() != '\n');
+        }
+        attempt++;
+
+        if (ans == 32) {
+            printf("\n Correct! The stone mechanisms click open.\n");
+            if (attempt > 1) p->puzzleFirstTryFailed = 1;
+            break;
+        }
+        else {
+            p->totalPuzzleFailures++;
+            printf(" Incorrect answer. The dial remains cold. Try again: ");
+            if (p->totalPuzzleFailures >= 5) {
+                unlockAchievement(p, 7);
+            }
+        }
+    }
+    printf("==================================================\n");
+    printf(" Press any key to resume exploration... ");
+    _getch();
+
+    if (p->puzzleFirstTryFailed == 0) {
+        unlockAchievement(p, 8);
+    }
+
+    system("cls");
+    drawMap(p);
+    drawUI(p);
+}
+
+// ==========================
+// Ghost Interaction Event
+// ==========================
+void triggerGhostEncounter(Player* p) {
+    system("cls");
+    printf("==================================================\n");
+    printf("          [⚠️] A SPIRIT EMERGES FROM THE DARK     \n");
+    printf("==================================================\n");
+    printf(" A sorrowful voice whispers inside your mind:\n");
+    printf(" 'Join us... abandon this painful flesh...' \n\n");
+    printf(" 1. Shake off the illusion and flee (Resist)\n");
+    printf(" 2. Listen closer to the spirit's melody (Accept)\n");
+    printf("==================================================\n");
+    printf(" Choice: ");
+
+    while (1) {
+        char ch = _getch();
+        if (ch == '1') {
+            printf("Resist\n\n[-] You successfully sprinted backwards!\n");
+            p->ghostAvoidStreak++;
+            if (p->ghostAvoidStreak >= 10) {
+                unlockAchievement(p, 0);
+            }
+            Sleep(1500);
+            break;
+        }
+        else if (ch == '2') {
+            printf("Accept\n\n");
+            printf("==================================================\n");
+            printf("          [💀 BAD ENDING: GHOSTIFICATION]          \n");
+            printf("==================================================\n");
+            printf(" Your eyes turn pale as the cold mist flows into your chest.\n");
+            printf(" You drop your flashlight. You are no longer human.\n");
+            printf(" You belong to the mansion now...\n");
+
+            unlockAchievement(p, 10);
+            printf("==================================================\n");
+            printf(" Press any key to return to Main Menu... ");
+            _getch();
+            showMainMenu(p);
+            return;
+        }
+    }
+
+    system("cls");
+    drawMap(p);
+    drawUI(p);
+}
+
+// ==========================
+// In-Game Item / Trap System
+// ==========================
+void triggerTrap(Player* p) {
+    p->trapTriggerCount++;
+    p->hp -= 15;
+    if (p->hp < 0) p->hp = 0;
+
+    gotoxy(0, MAP_HEIGHT + 9);
+    printf("[💥 TRAP] Stepped on a hidden floor spike! (-15 HP)     \n");
+
+    if (p->trapTriggerCount >= 5) {
+        unlockAchievement(p, 6);
+    }
+    Sleep(1200);
+}
+
+// ==========================
+// Core Game Updates
+// ==========================
+void checkJournalEvent(Player* p) {
+    int totalFound = 0;
+    for (int i = 0; i < MAX_JOURNALS; i++) {
+        if (p->collectedJournals[i] == 0) {
+            if (p->floor == journalLocs[i].floor && p->x == journalLocs[i].x && p->y == journalLocs[i].y) {
+                p->collectedJournals[i] = 1;
+                system("cls");
+                printf("==================================================\n");
+                printf("          [!] DISCOVERED AN OLD JOURNAL           \n");
+                printf("==================================================\n");
+                printf("%s\n", journalTexts[i]);
+                printf("==================================================\n");
+                printf(" Progress Auto-Saved. Press any key to return... ");
+
+                saveToSlot(p, currentSlot);
+                _getch();
+                system("cls");
+                drawMap(p);
+                drawUI(p);
+            }
+        }
+        if (p->collectedJournals[i] == 1) totalFound++;
+    }
+
+    if (totalFound == MAX_JOURNALS) {
+        unlockAchievement(p, 1);
+    }
+}
+
+void updateRoomName(Player* p) {
+    char oldRoom[50];
+    strcpy(oldRoom, p->roomName);
+    int roomIdx = 11;
+
+    if (p->floor == 1) {
+        if (p->x >= 1 && p->x <= 13 && p->y >= 1 && p->y <= 3) { strcpy(p->roomName, "1F Bedroom 1"); roomIdx = 0; }
+        else if (p->x >= 14 && p->x <= 34 && p->y >= 1 && p->y <= 13) { strcpy(p->roomName, "1F Main Stairs"); roomIdx = 1; }
+        else if (p->x >= 35 && p->x <= 48 && p->y >= 1 && p->y <= 3) { strcpy(p->roomName, "1F Bedroom 2"); roomIdx = 2; }
+        else if (p->x >= 1 && p->x <= 6 && p->y >= 5 && p->y <= 6) { strcpy(p->roomName, "1F Storage"); roomIdx = 3; }
+        else if (p->x >= 8 && p->x <= 13 && p->y >= 5 && p->y <= 6) { strcpy(p->roomName, "1F Bathroom (L)"); roomIdx = 4; }
+        else if (p->x >= 35 && p->x <= 40 && p->y >= 5 && p->y <= 6) { strcpy(p->roomName, "1F Bathroom (R)"); roomIdx = 5; }
+        else if (p->x >= 42 && p->x <= 48 && p->y >= 5 && p->y <= 6) { strcpy(p->roomName, "1F Small Room"); roomIdx = 6; }
+        else if (p->x >= 1 && p->x <= 13 && p->y >= 8 && p->y <= 9) { strcpy(p->roomName, "1F Dressroom"); roomIdx = 7; }
+        else if (p->x >= 35 && p->x <= 48 && p->y >= 8 && p->y <= 9) { strcpy(p->roomName, "1F Servant Room"); roomIdx = 8; }
+        else if (p->x >= 1 && p->x <= 13 && p->y >= 11 && p->y <= 13) { strcpy(p->roomName, "1F Master Bedroom"); roomIdx = 9; }
+        else if (p->x >= 35 && p->x <= 48 && p->y >= 11 && p->y <= 13) { strcpy(p->roomName, "1F Terrace"); roomIdx = 10; }
+        else { strcpy(p->roomName, "1F Hallway"); roomIdx = 11; }
+    }
+    else if (p->floor == 2) {
+        if (p->x >= 1 && p->x <= 13 && p->y >= 1 && p->y <= 3) { strcpy(p->roomName, "2F Bedroom 1"); roomIdx = 0; }
+        else if (p->x >= 14 && p->x <= 34 && p->y >= 1 && p->y <= 13) { strcpy(p->roomName, "2F Main Stairs"); roomIdx = 1; }
+        else if (p->x >= 35 && p->x <= 48 && p->y >= 1 && p->y <= 3) { strcpy(p->roomName, "2F Bedroom 2"); roomIdx = 2; }
+        else if (p->x >= 1 && p->x <= 6 && p->y >= 5 && p->y <= 6) { strcpy(p->roomName, "2F Office"); roomIdx = 3; }
+        else if (p->x >= 8 && p->x <= 13 && p->y >= 5 && p->y <= 6) { strcpy(p->roomName, "2F Library"); roomIdx = 4; }
+        else if (p->x >= 35 && p->x <= 40 && p->y >= 5 && p->y <= 6) { strcpy(p->roomName, "2F Lab"); roomIdx = 5; }
+        else if (p->x >= 42 && p->x <= 48 && p->y >= 5 && p->y <= 6) { strcpy(p->roomName, "2F Art Room"); roomIdx = 6; }
+        else if (p->x >= 1 && p->x <= 13 && p->y >= 8 && p->y <= 9) { strcpy(p->roomName, "2F Gallery"); roomIdx = 7; }
+        else if (p->x >= 35 && p->x <= 48 && p->y >= 8 && p->y <= 9) { strcpy(p->roomName, "2F Corridor"); roomIdx = 8; }
+        else if (p->x >= 1 && p->x <= 13 && p->y >= 11 && p->y <= 13) { strcpy(p->roomName, "2F Attic Room"); roomIdx = 9; }
+        else if (p->x >= 35 && p->x <= 48 && p->y >= 11 && p->y <= 13) { strcpy(p->roomName, "2F Balcony"); roomIdx = 10; }
+        else { strcpy(p->roomName, "2F Hallway"); roomIdx = 11; }
+    }
+
+    p->visitedRooms[p->floor - 1][roomIdx] = 1;
+
+    if (strcmp(oldRoom, p->roomName) != 0) {
+        saveToSlot(p, currentSlot);
+        gotoxy(0, MAP_HEIGHT + 9);
+        printf("[Auto Save] Entered new room! Progress saved to Slot %d.          \n", currentSlot);
+    }
+}
+
+void checkTriggerPoints(Player* p) {
+    if (p->floor == 1 && p->x == 3 && p->y == 5) {
+        triggerTrap(p);
+        p->x = 4;
+    }
+    if (p->floor == 1 && p->x == 45 && p->y == 12) {
+        triggerGhostEncounter(p);
+    }
+    if (p->floor == 2 && p->x == 10 && p->y == 6) {
+        triggerMansionPuzzle(p);
+        p->y = 7;
+    }
+}
+
+void checkStairsEvent(Player* p) {
+    if (p->y == 1 && p->x >= 21 && p->x <= 26) {
+        system("cls");
+        if (p->floor == 1) { p->floor = 2; }
+        else { p->floor = 1; }
+        p->y = 2;
+        Sleep(500);
+        updateRoomName(p);
+        saveToSlot(p, currentSlot);
+    }
+}
+
+int confirmQuitGame() {
+    gotoxy(0, MAP_HEIGHT + 11);
+    printf("==================================================\n");
+    printf(" Are you sure you want to quit the game? (Y/N) : ");
+    while (1) {
+        char ch = tolower(_getch());
+        if (ch == 'y') return 1;
+        if (ch == 'n') {
+            gotoxy(0, MAP_HEIGHT + 11);
+            printf("                                                  \n");
+            printf("                                                  \n");
+            return 0;
+        }
+    }
+}
+
+// ==========================
+// Menus Layout
+// ==========================
+void showJournalMenu(Player* p) {
+    system("cls");
+    while (1) {
+        printf("==================================================\n");
+        printf("                COLLECTED ARCHIVE LOGS             \n");
+        printf("==================================================\n");
+        for (int i = 0; i < MAX_JOURNALS; i++) {
+            if (p->collectedJournals[i] == 1) {
+                printf("  [%2d] Old Scattered Journal Log (Found)\n", i + 1);
+            }
+            else {
+                printf("  [%2d] ------------------------ (Locked)\n", i + 1);
+            }
+        }
+        printf("==================================================\n");
+        printf(" Enter log number to read, or press [B] to back: ");
+
+        char input[10]; int idx = 0;
+        while (1) {
+            char ch = _getch();
+            if (tolower(ch) == 'b') { idx = -1; break; }
+            if (ch == '\r' || ch == '\n') { input[idx] = '\0'; break; }
+            if (isdigit(ch) && idx < 5) { printf("%c", ch); input[idx++] = ch; }
+        }
+        if (idx == -1) break;
+
+        int num = atoi(input);
+        if (num >= 1 && num <= MAX_JOURNALS && p->collectedJournals[num - 1] == 1) {
+            system("cls");
+            printf("==================================================\n%s\n==================================================\n", journalTexts[num - 1]);
+            printf(" Press any key to return... "); _getch();
+        }
+        system("cls");
+    }
+    system("cls"); drawMap(p); drawUI(p);
+}
+
+void showSaveManagerMenu(Player* p) {
+    p->saveMenuOpenCount++;
+    if (p->saveMenuOpenCount >= 5) {
+        unlockAchievement(p, 5);
+    }
+
+    system("cls");
+    while (1) {
+        printf("==================================================\n");
+        printf("                SAVE MANAGEMENT MENU               \n");
+        printf("==================================================\n");
+        printf("  1. Save Game     2. Load Game    3. Resume\n");
+        printf("==================================================\n\n Choice: ");
+        char choice = _getch();
+        if (choice == '1') {
+            saveToSlot(p, currentSlot);
+            break;
+        }
+        else if (choice == '2') {
+            printf("\n Select Slot (1-3): ");
+            int ts = _getch() - '0';
+            if (ts >= 1 && ts <= 3 && globalSave.slotExists[ts - 1]) {
+                currentSlot = ts; *p = globalSave.playerData[ts - 1];
+                break;
+            }
+        }
+        else if (choice == '3') break;
+        system("cls");
+    }
+    system("cls"); drawMap(p); drawUI(p);
+}
+
+void showHowToPlayMenu() {
+    system("cls");
+    printf("==================================================\n");
+    printf("                    HOW TO PLAY                    \n");
+    printf("==================================================\n\n");
+    printf(" [ Controls ]\n");
+    printf("  - W, A, S, D : Move your investigator character ('P')\n");
+    printf("  - E          : Pick up items under your feet (Hidden / Dropped)\n");
+    printf("  - G          : Drop the currently held item onto the floor\n");
+    printf("  - I          : Open Inventory Menu (Equip/Hold/Use Items)\n");
+    printf("  - M          : Save/Load Checkpoint System\n");
+    printf("  - J          : Open Collected Document Archive\n");
+    printf("  - Q          : Quit Game\n\n");
+    printf(" [ Inventory Limits ]\n");
+    printf("  - You can carry a maximum of 5 items total.\n");
+    printf("  - Dropped items remain on the ground layout as an asterisks (*).\n");
+    printf("==================================================\n");
+    printf(" Press any key to return... "); _getch();
+}
+
+void showAchievementMenu(Player* p) {
+    system("cls");
+    loadSaveDatFile();
+
+    printf("==================================================\n");
+    printf("                GAME ACHIEVEMENTS                  \n");
+    printf("==================================================\n\n");
+    int unlockedTotal = 0;
+    for (int i = 0; i < NUM_ACHIEVEMENTS; i++) {
+        if (p->achievements[i] == 1) {
+            printf("  [🏆] %-32s : Unlocked\n", achNames[i]);
+            printf("       (%s)\n\n", achDescs[i]);
+            unlockedTotal++;
+        }
+        else {
+            printf("  [🔒] [ Hidden Legacy Achievement ]   : Locked\n\n");
+        }
+    }
+    printf("==================================================\n");
+    printf(" Total Achievements Unlocked: %d / %d\n", unlockedTotal, NUM_ACHIEVEMENTS);
+    printf(" Press any key to return to Main Menu... ");
+    _getch();
+}
+
+void showTitleMenu(Player* p) {
+    system("cls"); loadSaveDatFile();
+    printf("==================================================\n");
+    printf("           SELECT A SAVE SLOT TO START            \n");
+    printf("==================================================\n\n");
+    for (int i = 1; i <= NUM_SLOTS; i++) {
+        if (globalSave.slotExists[i - 1]) printf("  [%d] Slot %d - (%dF / %s)\n", i, i, globalSave.playerData[i - 1].floor, globalSave.playerData[i - 1].roomName);
+        else printf("  [%d] Slot %d - (Empty)\n", i, i);
+    }
+    printf("\n Pick [1-3] or [B] for Main Menu: ");
+    while (1) {
+        char ch = _getch();
+        if (ch >= '1' && ch <= '3') { currentSlot = ch - '0'; break; }
+        if (tolower(ch) == 'b') return;
+    }
+
+    if (globalSave.slotExists[currentSlot - 1]) {
+        *p = globalSave.playerData[currentSlot - 1];
+    }
+    else {
+        memset(p, 0, sizeof(Player));
+        p->hp = 100; p->maxHp = 100; p->x = 4; p->y = 2; p->floor = 1;
+        strcpy(p->roomName, "1F Bedroom 1");
+        strcpy(p->holdingItem, "None");
+        p->visitedRooms[0][0] = 1;
+
+        for (int i = 0; i < MAX_ITEMS; i++) strcpy(p->items[i], "Empty");
+
+        randomizeHealItems(p);
+        saveToSlot(p, currentSlot);
+    }
+}
+
+void showMainMenu(Player* p) {
+    while (1) {
+        system("cls");
+        printf("==================================================\n");
+        printf("            MYSTERY MANSION HORROR RPG             \n");
+        printf("==================================================\n\n");
+        printf("  1. Start Game (Select / Load Slot)\n");
+        printf("  2. How To Play (Game Instructions)\n");
+        printf("  3. Achievement List (Progress Stats)\n");
+        printf("  4. Exit Game\n\n");
+        printf("==================================================\n");
+        printf(" Choose an option (1-4): ");
+
+        char choice = _getch();
+        if (choice == '1') {
+            showTitleMenu(p);
+            if (strlen(p->roomName) > 0) return;
+        }
+        else if (choice == '2') {
+            showHowToPlayMenu();
+        }
+        else if (choice == '3') {
+            showAchievementMenu(p);
+        }
+        else if (choice == '4') {
+            exit(0);
+        }
+    }
+}
+
+// ==========================
+// Frame UI Rendering
+// ==========================
+void drawUI(Player* p) {
+    gotoxy(0, MAP_HEIGHT + 1);
+    printf("==================================================\n");
+    printf("Active Slot      : [ Slot %d ]\n", currentSlot);
+    printf("Current Location : %s (%dF)\n", p->roomName, p->floor);
+    printf("HP Bar           : [");
+    int filled = (p->hp * 15) / p->maxHp;
+    for (int i = 0; i < filled; i++) printf("#");
+    for (int i = filled; i < 15; i++) printf("-");
+    printf("] %d/%d\n", p->hp, p->maxHp);
+
+    printf("Holding Hand     : [ %s ]\n", p->holdingItem);
+    printf("Inventory (5 Max): ");
+    int hasItem = 0;
+    for (int i = 0; i < MAX_ITEMS; i++) {
+        if (strlen(p->items[i]) > 0 && strcmp(p->items[i], "Empty") != 0) {
+            printf("[%s] ", p->items[i]);
+            hasItem = 1;
+        }
+    }
+    if (!hasItem) printf("(Empty)");
+    printf("\n");
+
+    printf("==================================================\n");
+    printf("WASD:Move | E:Loot | G:Drop Hand | I:Inventory | M:Save | J:Logs | Q:Quit\n");
+}
+
+void drawMap(Player* p) {
+    gotoxy(0, 0);
+    for (int y = 0; y < MAP_HEIGHT; y++) {
+        for (int x = 0; x < MAP_WIDTH; x++) {
+            if (x == p->x && y == p->y) {
+                printf("P");
+            }
+            else {
+                int isDroppedPrinted = 0;
+                for (int d = 0; d < MAX_DROPPED_ITEMS; d++) {
+                    if (p->droppedItems[d].isActive && p->floor == p->droppedItems[d].floor && x == p->droppedItems[d].x && y == p->droppedItems[d].y) {
+                        printf("*");
+                        isDroppedPrinted = 1;
+                        break;
+                    }
+                }
+                if (!isDroppedPrinted) {
+                    printf("%c", map[p->floor - 1][y][x]);
+                }
+            }
+        }
+        printf("\n");
+    }
+}
+
+void movePlayer(Player* p, char key) {
+    int nx = p->x, ny = p->y;
+    char lk = tolower(key);
+    if (lk == 'w') ny--;
+    else if (lk == 's') ny++;
+    else if (lk == 'a') nx--;
+    else if (lk == 'd') nx++;
+    else return;
+
+    if (nx < 0 || nx >= MAP_WIDTH || ny < 0 || ny >= MAP_HEIGHT) return;
+    if (map[p->floor - 1][ny][nx] == '#') return;
+
+    p->x = nx; p->y = ny;
+    updateRoomName(p);
+    checkTriggerPoints(p);
+    checkJournalEvent(p);
+    checkStairsEvent(p);
+}
+
+// ==========================
+// Program Entry
+// ==========================
+int main() {
+    srand((unsigned int)time(NULL));
+    system("mode con cols=100 lines=45");
+    system("cls");
+    hideCursor();
+
+    Player player;
+    player.roomName[0] = '\0';
+
+    showMainMenu(&player);
+
+    system("cls");
+    drawMap(&player);
+    drawUI(&player);
+
+    // [복구 및 완성] 무한 루프 내 핵심 입력 감지 및 사망 처리 시퀀스
+    while (1) {
+        // 플레이어 HP가 0 이하가 되었을 때의 처리 (Bad Ending 1)
+        if (player.hp <= 0) {
+            system("cls");
+            printf("==================================================\n");
+            printf("          [💀 BAD ENDING 1: VALIANT DEATH]        \n");
+            printf("==================================================\n");
+            printf(" Your injuries became too severe to hold awareness.\n");
+            printf(" You collapse onto the cold mansion floor...\n");
+            printf(" Game Over.\n");
+
+            unlockAchievement(&player, 2); // 'What a Shame to Die!' 업적 해제
+            printf("==================================================\n");
+            printf(" Press any key to return to Main Menu... ");
+            _getch();
+
+            showMainMenu(&player);
+            system("cls");
+            drawMap(&player);
+            drawUI(&player);
+        }
+
+        // 키 입력이 있을 때만 프레임 갱신
+        if (_kbhit()) {
+            char ch = _getch();
+            char lch = tolower(ch);
+
+            if (lch == 'w' || lch == 'a' || lch == 's' || lch == 'd') {
+                movePlayer(&player, ch);
+            }
+            else if (lch == 'e') {
+                executeLootItem(&player);
+            }
+            else if (lch == 'g') {
+                executeDropItem(&player);
+            }
+            else if (lch == 'i') {
+                showInventoryMenu(&player);
+            }
+            else if (lch == 'm') {
+                showSaveManagerMenu(&player);
+            }
+            else if (lch == 'j') {
+                showJournalMenu(&player);
+            }
+            else if (lch == 'q') {
+                if (confirmQuitGame()) {
+                    break;
+                }
+                system("cls");
+            }
+
+            // 프레임 리렌더링
+            drawMap(&player);
+            drawUI(&player);
+        }
+        Sleep(30); // CPU 점유율 최적화
+    }
+
+    return 0;
+}
