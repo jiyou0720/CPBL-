@@ -15,8 +15,8 @@ typedef struct {
     int x, y;
 } Pos;
 
-Pos checkpoint  = { 5,  5 };   // 마지막으로 밟은 체크포인트
-Pos start_pos   = { 2,  2 };   // 게임 시작 위치
+Pos checkpoint = { 5,  5 };   // 마지막으로 밟은 체크포인트
+Pos start_pos = { 2,  2 };   // 게임 시작 위치
 int px, py;
 
 void setCursorPos(int x, int y)
@@ -33,18 +33,18 @@ void drawScreen()
     setCursorPos(20, 8);    printf("X");                    // 함정 타일 (즉사 트리거: 유령)
     setCursorPos(0, 22);
     printf("WASD: 이동  |  난이도: %s  |  체크포인트: (%d, %d)",
-           difficulty == 0 ? "쉬움" :
-           difficulty == 1 ? "보통" : "어려움",
-           checkpoint.x, checkpoint.y);
+        difficulty == 0 ? "쉬움" :
+        difficulty == 1 ? "보통" : "어려움",
+        checkpoint.x, checkpoint.y);
 }
 
 void drawDeathScreen(const char* msg)
 {
     system("cls");
-    setCursorPos(10, 8);  printf("==============================");
+    setCursorPos(10, 8);  printf("=====================================================");
     setCursorPos(10, 9);  printf("          사망했습니다        ");
     setCursorPos(10, 10); printf("  %s", msg);
-    setCursorPos(10, 11); printf("==============================");
+    setCursorPos(10, 11); printf("=====================================================");
     setCursorPos(10, 12); printf("  아무 키나 누르면 계속합니다.");
     _getch();
 }
@@ -128,7 +128,7 @@ int main()
 
         key = _getch();
 
-        if      (key == 'w') py--;
+        if (key == 'w') py--;
         else if (key == 's') py++;
         else if (key == 'a') px--;
         else if (key == 'd') px++;
