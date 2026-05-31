@@ -1,5 +1,6 @@
 // COMBAT_GAMEOVER - 게임 오버 화면 담당
 // HP 0 또는 시간 초과 시 전용 화면 표시 (재시작 / 타이틀 선택)
+// 게임 오버 아스키 아트가 ?? 되는 거 해결 중
 
 #include <stdio.h>
 #include <Windows.h>
