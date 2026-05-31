@@ -1,5 +1,6 @@
 // COMBAT_DEATH - 사망/부활 담당
 // 즉사 또는 체크포인트 부활 (난이도 연동)
+//참고사항: 체크 포인트, 함정 타일 임시 설정됨.
 
 #include <stdio.h>
 #include <Windows.h>
