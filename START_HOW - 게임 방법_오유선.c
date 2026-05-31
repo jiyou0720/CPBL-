@@ -1,5 +1,5 @@
 // START_HOW - 게임 방법
-// 필수 / P2 | 조작키·목표·UI 설명(ASCII or 텍스트)
+// 필수 / P2 | 조작키·목표·UI 설명(텍스트 선택)
 
 #include <stdio.h>
 #include <Windows.h>
@@ -15,7 +15,7 @@ void drawGameUI(int px, int py, int has_item, int ix, int iy)
 {
     setCursorPos(0, 0);
     printf("==================================================\n");
-    printf(" [MISSION] 탈출구를 찾아 아이템(I)을 소지한 채 탈출하라!\n");
+    printf(" 저택의 비밀을 밝히고 살아서 나가라.\n");
     printf("==================================================\n");
 
     // 2. 우측 사이드바: 플레이어의 현재 실시간 상태 (UI)
@@ -24,7 +24,7 @@ void drawGameUI(int px, int py, int has_item, int ix, int iy)
     setCursorPos(45, 4);  printf("│ 플레이어: P  │");
     setCursorPos(45, 5);  printf("│ 현재 좌표: (%2d, %2d) │", px, py);
     setCursorPos(45, 6);  printf("├──────────────┤");
-    setCursorPos(45, 7);  
+    setCursorPos(45, 7);
     if (has_item)
         printf("│ 인벤토리: [I]│ (손에 쥐고 있음)");
     else
@@ -34,7 +34,7 @@ void drawGameUI(int px, int py, int has_item, int ix, int iy)
     if (!has_item)
     {
         setCursorPos(45, 10);
-        printf("[드롭된 아이템 위치]: (%d, %d)", ix, iy);
+        printf("[드롭된 아이템(i) 위치]: (%d, %d)", ix, iy);
     }
 
     // 게임 조작키 가이드 
@@ -72,7 +72,7 @@ int main()
 
         key = _getch();
 
-        if      (key == 'w' || key == 'W') py--;
+        if (key == 'w' || key == 'W') py--;
         else if (key == 's' || key == 'S') py++;
         else if (key == 'a' || key == 'A') px--;
         else if (key == 'd' || key == 'D') px++;
