@@ -1,5 +1,3 @@
-//각각의 퍼즐들은 주석으로 나누어서 구분하였음.
-
 #define _CRT_SECURE_NO_WARNINGS
 #include <stdio.h>
 #include <stdlib.h>
