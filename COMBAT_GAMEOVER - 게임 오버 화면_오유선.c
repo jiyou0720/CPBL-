@@ -1,6 +1,5 @@
 // COMBAT_GAMEOVER - 게임 오버 화면 담당
 // HP 0 또는 시간 초과 시 전용 화면 표시 (재시작 / 타이틀 선택)
-// 게임 오버 아스키 아트가 ?? 되는 거 해결 중
 
 #include <stdio.h>
 #include <Windows.h>
@@ -36,24 +35,12 @@ int showGameOver(int cause)
         else
             printf("시간이 초과되었습니다.");
 
-        // 게임 오버 타이틀 (한글 "게임" 아스키 아트 + O V E R)
-        setCursorPos(10, 5);  printf("⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣀⣠⡀⠀");
-        setCursorPos(10, 6);  printf("⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣤⣤⠀⠀⠀⢀⣴⣿⡶⠀⣾⣿⣿⡿⠟⠛⠁");
-        setCursorPos(10, 7);  printf("⠀⠀⠀⠀⠀⠀⣀⣀⣄⣀⠀⠀⠀⠀⣶⣶⣦⠀⠀⠀⠀⣼⣿⣿⡇⠀⣠⣿⣿⣿⠇⣸⣿⣿⣧⣤⠀⠀⠀");
-        setCursorPos(10, 8);  printf("⠀⠀⢀⣴⣾⣿⡿⠿⠿⠿⠇⠀⠀⣸⣿⣿⣿⡆⠀⠀⢰⣿⣿⣿⣷⣼⣿⣿⣿⡿⢀⣿⣿⡿⠟⠛⠁⠀⠀");
-        setCursorPos(10, 9);  printf("⠀⣴⣿⡿⠋⠁⠀⠀⠀⠀⠀⠀⢠⣿⣿⣹⣿⣿⣿⣿⣿⣿⡏⢻⣿⣿⢿⣿⣿⠃⣼⣿⣯⣤⣴⣶⣿⡤⠀");
-        setCursorPos(10, 10); printf("⣼⣿⠏⠀⣀⣠⣤⣶⣾⣷⠄⣰⣿⣿⡿⠿⠻⣿⣯⣸⣿⡿⠀⠀⠀⠁⣾⣿⡏⢠⣿⣿⠿⠛⠋⠉⠀⠀⠀");
-        setCursorPos(10, 11); printf("⣿⣿⠲⢿⣿⣿⣿⣿⡿⠋⢰⣿⣿⠋⠀⠀⠀⢻⣿⣿⣿⠇⠀⠀⠀⠀⠙⠛⠀⠀⠉⠁⠀⠀⠀⠀⠀⠀⠀");
-        setCursorPos(10, 12); printf("⠹⢿⣷⣶⣿⣿⠿⠋⠀⠀⠈⠙⠃⠀⠀⠀⠀⠀⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀");
-        setCursorPos(10, 13); printf("⠀⠀⠈⠉⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣀⣤⣤⣴⣶⣦⣤⡀⠀");
-        setCursorPos(10, 14); printf("⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣀⡀⠀⠀⠀⠀⠀⠀⠀⣠⡇⢰⣶⣶⣾⡿⠷⣿⣿⣿⡟⠛⣉⣿⣿⣿⠆");
-        setCursorPos(10, 15); printf("⠀⠀⠀⠀⠀⠀⢀⣤⣶⣿⣿⡎⣿⣿⣦⠀⠀⠀⢀⣤⣾⠟⢀⣿⣿⡟⣁⠀⠀⣸⣿⣿⣤⣾⣿⡿⠛⠁⠀");
-        setCursorPos(10, 16); printf("⠀⠀⠀⠀⣠⣾⣿⡿⠛⠉⢿⣦⠘⣿⣿⡆⠀⢠⣾⣿⠋⠀⣼⣿⣿⣿⠿⠷⢠⣿⣿⣿⠿⢻⣿⣧⠀⠀⠀");
-        setCursorPos(10, 17); printf("⠀⠀⠀⣴⣿⣿⠋⠀⠀⠀⢸⣿⣇⢹⣿⣷⣰⣿⣿⠃⠀⢠⣿⣿⢃⣀⣤⣤⣾⣿⡟⠀⠀⠀⢻⣿⣆⠀⠀");
-        setCursorPos(10, 18); printf("⠀⠀⠀⣿⣿⡇⠀⠀⢀⣴⣿⣿⡟⠀⣿⣿⣿⣿⠃⠀⠀⣾⣿⣿⡿⠿⠛⢛⣿⡟⠀⠀⠀⠀⠀⠻⠿⠀⠀");
-        setCursorPos(10, 19); printf("⠀⠀⠀⠹⣿⣿⣶⣾⣿⣿⣿⠟⠁⠀⠸⢿⣿⠇⠀⠀⠀⠛⠛⠁⠀⠀⠀⠀⠀⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀");
-        setCursorPos(10, 20); printf("⠀⠀⠀⠀⠈⠙⠛⠛⠛⠋⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀");
-        
+        setCursorPos(5, 5);  printf(" ____    _    __  __ _____    ___  _   _ _____ ____  ");
+        setCursorPos(5, 6);  printf("/ ___|  / \\  |  \\/  | ____|  / _ \\| | | | ____|  _ \\ ");
+        setCursorPos(5, 7);  printf("| |  _  / _ \\ | |\\/| |  _|   | | | | | | |  _| | |_) |");
+        setCursorPos(5, 8);  printf("| |_| |/ ___ \\| |  | | |___  | |_| | |_| | |___|  _ < ");
+        setCursorPos(5, 9);  printf("\\____/_/   \\_\\_|  |_|_____|  \\___/ \\___/|_____|_| \\_\\");
+
 
         // 메뉴 선택지 (겹치지 않도록 Y 좌표를 23, 24로 수정)
         setCursorPos(14, 23);
@@ -64,22 +51,19 @@ int showGameOver(int cause)
         // 안내 메시지 (Y 좌표를 26으로 수정)
         setCursorPos(10, 26); printf("방향키: 선택   Enter: 확인");
 
-        // 입력 처리 (방향키는 두 바이트)
         key = _getch();
         if (key == 0 || key == 224)
         {
             int arrow = _getch();
-            if      (arrow == 72 && selected > 0) selected--;  // 위
-            else if (arrow == 80 && selected < 1) selected++;  // 아래
+            if (arrow == 72 && selected > 0) selected--; 
+            else if (arrow == 80 && selected < 1) selected++;  
         }
-        else if (key == 13)  // Enter
+        else if (key == 13)  
         {
             return selected;
         }
     }
 }
-
-// 예시
 int main()
 {
     // HP 0으로 게임 오버
