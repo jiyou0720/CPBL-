@@ -1,4 +1,5 @@
 // save.dat 파일 불러오기
+
 void loadSaveDatFile() {
     FILE* fp = fopen("save.dat", "rb");
 
