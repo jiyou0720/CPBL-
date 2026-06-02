@@ -4,49 +4,53 @@
 #include <time.h>
 
 #define TOTAL_NOTES 15
-#define TOTAL_ROOMS 10
+#define TOTAL_ROOMS 12
 
 // --- 구조체 정의 ---
 
-// 1. 게임 설정 구조체 (옵션 메뉴용)
 typedef struct {
     int bgm_on;
     int sfx_on;
     int master_volume;
     int text_speed;
-    char key_inspect; // 'F' 키 상호작용
+    char key_inspect; 
 } GameSettings;
 
-// 2. 플레이어 상태 구조체
 typedef struct {
     int hp;
-    int current_room;   // 현재 위치한 방 ID
-    int has_holy_water; // 성수 획득 여부
-    int has_weapon;     // 무기(망치) 획득 여부
-    int notes_found;    // 찾은 일기 수
-    int solved_puzzles; // 푼 퍼즐 수
+    int current_room;
+    int has_holy_water; // 성수 (마스터 침실)
+    int has_weapon;     // 망치 (침실 2)
+    int has_key;        // 열쇠 (연구실/서재)
+    int hp_potions;     // 회복제 개수
+    int notes_found;    
+    int solved_puzzles; 
 } Player;
 
-// 3. 일기 구조체
 typedef struct {
     int id;
     char date[20];
     char content[1000];
 } Note;
 
-// 4. 방(오브젝트 위치) 구조체
 typedef struct {
     int id;
     const char* name;
     int has_note;
     int note_index;
     int is_searched;
-    int puzzle_type; // 0: 없음, 1~5: 기획 퍼즐 번호
+    int puzzle_type;     // 0: 없음, 1~3: 퀴즈 잠금방
+    int has_holy_water;  // 방 내부 성수 존재 여부
+    int has_weapon;      // 방 내부 망치 존재 여부
+    int has_key;         // 방 내부 열쇠 존재 여부
+    int has_potion;      // 방 내부 회복제 존재 여부
+    int is_locked;       // 문 잠김 여부 (1: 잠김, 0: 열림)
+    int trap_zone;       // 함정 구역 여부 (1: 함정 방, 0: 안전)
 } Room;
 
 // --- 전역 변수 선언 ---
 GameSettings settings = {1, 1, 50, 2, 'F'};
-Player player = {10, 0, 0, 0, 0, 0}; // 시작 HP: 10, 시작위치: 현관홀
+Player player = {10, 0, 0, 0, 0, 0, 0, 0}; // 시작 HP: 10, 현관홀 시작
 Note origin_notes[TOTAL_NOTES];
 Room rooms[TOTAL_ROOMS];
 
@@ -61,21 +65,19 @@ void trigger_puzzle(int puzzle_type);
 void show_option_menu();
 void check_ending_condition();
 
-// 임시 notes.dat 데이터 생성기 (파일이 없을 경우 대비)
 void create_default_notes_file() {
     FILE* fp = fopen("notes.dat", "r");
     if (fp != NULL) {
         fclose(fp);
-        return; // 이미 있으면 생성 안함
+        return; 
     }
     fp = fopen("notes.dat", "w");
     for(int i=1; i<=TOTAL_NOTES; i++) {
-        fprintf(fp, "%d|0000.00.00|사용인의 일기 %d번째 조각입니다. 저택 내부의 비밀과 심장에 대한 단서가 적혀 있습니다.\n", i, i);
+        fprintf(fp, "%d|0000.00.00|사용인의 일기 %d번째 조각입니다. 저택 심장에 대한 단서가 적혀 있습니다.\n", i, i);
     }
     fclose(fp);
 }
 
-// notes.dat 파일 읽기
 int load_notes_from_file() {
     create_default_notes_file();
     FILE* fp = fopen("notes.dat", "r");
@@ -103,14 +105,13 @@ int main() {
     printf("\n어둠 속에서 검은 형체-집사가 천천히 다가옵니다.\n");
     printf("\"...환영합니다. 손님...\"\n");
 
-    start_tutorial(); // 집사 튜토리얼 분기 시작
-    init_game_data();   // 맵 및 일기 랜덤 셔플
-    game_main_loop();   // 메인 루프 돌입
+    start_tutorial(); 
+    init_game_data();   // 평면도 연동 데이터 초기화
+    game_main_loop();   
 
     return 0;
 }
 
-// --- 집사 튜토리얼 분기 기능 구현 ---
 void start_tutorial() {
     int choice1, choice2;
     while(1) {
@@ -148,19 +149,22 @@ void start_tutorial() {
     }
 }
 
-// --- 게임 데이터 및 맵 정보 기획 연동 ---
+// --- 평면도 기반 맵 데이터 완벽 동기화 ---
 void init_game_data() {
+    // ID, 방이름, 일지보유, 일지인덱스, 조사여부, 퍼즐유형, 성수, 망치, 열쇠, 회복제, 잠금상태, 함정여부
     Room def_rooms[TOTAL_ROOMS] = {
-        {0, "현관홀 (1층)", 1, 0, 0, 0},
-        {1, "주인공 방 / 손님방 (1층)", 1, 0, 0, 2}, // 스위치 맞추기 퍼즐
-        {2, "응접실 (1층)", 1, 0, 0, 0},
-        {3, "연구실 / 서재 (1층)", 1, 0, 0, 3},       // 연립방정식 퍼즐
-        {4, "도서관 (1층)", 1, 0, 0, 0},
-        {5, "주 계단 (1층~2층 사이)", 1, 0, 0, 4},   // 스토리 연관 집사 나이 문제
-        {6, "상부 복도 (2층)", 1, 0, 0, 0},
-        {7, "드레스룸 (2층)", 1, 0, 0, 0},
-        {8, "사용인 방 (2층)", 1, 0, 0, 5},           // 병명 맞추기 퍼즐
-        {9, "핵이 숨겨진 비밀 방", 0, 0, 0, 1}       // 순서 기억 버튼 퍼즐
+        {0, "현관홀 (1층)", 1, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+        {1, "주인공 방 / 손님방 (1층)", 1, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+        {2, "응접실 (1층)", 1, 0, 0, 0, 0, 0, 0, 1, 0, 0},            // 회복제 1개
+        {3, "연구실 / 서재 (1층)", 1, 0, 0, 1, 0, 0, 1, 0, 1, 1},       // 퍼즐1, 열쇠보유, 잠금방, 함정구역
+        {4, "도서관 (1층)", 1, 0, 0, 0, 0, 0, 0, 0, 0, 1},             // 함정구역
+        {5, "중앙 복도 (1층)", 1, 0, 0, 0, 0, 0, 0, 0, 0, 1},          // 함정구역
+        {6, "주 계단 (1층-2층 사이)", 1, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+        {7, "침실 1 (2층)", 1, 0, 0, 0, 0, 0, 0, 1, 0, 0},             // 회복제 1개
+        {8, "침실 2 (2층)", 1, 0, 0, 0, 0, 1, 0, 1, 0, 1},             // 망치보유, 회복제 1개, 함정구역
+        {9, "마스터 침실 스위트 (2층)", 1, 0, 0, 2, 1, 0, 0, 0, 1, 1},  // 퍼즐2, 성수보유, 잠금방, 함정구역
+        {10, "창고 및 드레스룸 통로 (2층)", 1, 0, 0, 3, 0, 0, 0, 0, 1, 1}, // 퍼즐3, 잠금방, 함정구역
+        {11, "핵이 숨겨진 비밀 방 (유틸리티실)", 0, 0, 0, 0, 0, 0, 0, 0, 1, 0} // 최종보스방 (열쇠필요)
     };
 
     int shuffle[TOTAL_NOTES];
@@ -176,7 +180,6 @@ void init_game_data() {
     }
 }
 
-// --- 메인 게임 루프 엔진 ---
 void game_main_loop() {
     int choice;
     printf("\n집사의 안내를 받아 [손님방]에 도착한 당신. 문득 기이한 소름이 돋아납니다.\n");
@@ -184,15 +187,12 @@ void game_main_loop() {
 
     while(player.hp > 0) {
         printf("\n==================================================\n");
-        printf(" 현재 위치: %s | HP: %d/10 | 일지 조각: %d/%d\n", 
+        printf(" 현재 위치: %s | HP: %d/10 | 일지: %d/%d\n", 
                rooms[player.current_room].name, player.hp, player.notes_found, TOTAL_NOTES);
         printf("==================================================\n");
-        printf(" 1. 이동하기 (W/A/S/D 방향 탐색)\n");
-        
-        // 🛠️ [해결] %c 구멍에 들어갈 매칭 변수(settings.key_inspect)를 맨 뒤에 명시했습니다.
-        printf(" 2. [%c] 상호작용 (아이템/NPC/퍼즐/오브젝트 조사)\n", settings.key_inspect);
-        
-        printf(" 3. [E] 가방/인벤토리 열기\n");
+        printf(" 1. 이동하기 (W/A/S/D 방 이동)\n");
+        printf(" 2. [%c] 상호작용 (아이템 줍기/NPC 대화/오브젝트 검사)\n", settings.key_inspect);
+        printf(" 3. [E] 가방/인벤토리 열기 및 회복제 사용\n");
         printf(" 4. [ESC] 게임 옵션 메뉴 진입\n");
         printf(" 0. 게임 포기하기\n");
         printf("--------------------------------------------------\n");
@@ -209,7 +209,21 @@ void game_main_loop() {
                 printf("\n--- [E] 가방 인벤토리 리스트 ---\n");
                 printf("- 소지 성수: %s\n", player.has_holy_water ? "보유 중" : "없음");
                 printf("- 소지 무기(망치): %s\n", player.has_weapon ? "보유 중" : "없음");
+                printf("- 소지 비밀방 열쇠: %s\n", player.has_key ? "보유 중" : "없음");
+                printf("- HP 회복제: %d개 보유 중\n", player.hp_potions);
                 printf("- 획득한 단서 일지 수: %d장\n", player.notes_found);
+                
+                if (player.hp_potions > 0 && player.hp < 10) {
+                    printf("회복제를 사용하여 HP를 3 회복하시겠습니까? (1: 예, 2: 아니오): ");
+                    int use_p;
+                    scanf("%d", &use_p);
+                    if (use_p == 1) {
+                        player.hp_potions--;
+                        player.hp += 3;
+                        if (player.hp > 10) player.hp = 10;
+                        printf("HP가 회복되었습니다. 현재 HP: %d\n", player.hp);
+                    }
+                }
                 break;
             case 4: show_option_menu(); break;
             default: printf("[!] 올바른 명령 번호가 아닙니다.\n"); break;
@@ -225,12 +239,11 @@ void game_main_loop() {
     }
 }
 
-// --- 방 이동 처리 및 함정/집사 추격 연동 ---
 void move_room() {
     printf("\n어디로 가시겠습니까? (방 번호를 선택하여 이동)\n");
     for(int i=0; i<TOTAL_ROOMS; i++) {
         if(i == player.current_room) continue;
-        printf(" [%d] %s\n", i, rooms[i].name);
+        printf(" [%d] %s %s\n", i, rooms[i].name, rooms[i].is_locked ? "(잠김)" : "");
     }
     printf("선택: ");
     int target;
@@ -240,11 +253,31 @@ void move_room() {
         return;
     }
 
+    // 잠금방 예외 처리
+    if (rooms[target].is_locked) {
+        if (target == 11) { // 최종 비밀방은 열쇠 필요
+            if (player.has_key) {
+                printf("\n[시스템] 서재에서 주운 열쇠로 굳게 닫힌 책장 비밀 통로를 열었습니다!\n");
+                rooms[target].is_locked = 0;
+            } else {
+                printf("\n[잠김] 문이 단단히 잠겨 있습니다. 열쇠가 필요한 것 같습니다.\n");
+                return;
+            }
+        } else {
+            printf("\n[잠김] 퍼즐 장치로 락이 걸려 있습니다. 문 앞쪽 오브젝트를 상호작용하여 퍼즐을 푸세요.\n");
+            // 해당 방 앞에서 퍼즐을 풀 수 있도록 유도하기 위해 위치 이동을 막음
+            printf("%s 문 앞에서 퍼즐 조사를 먼저 수행해야 합니다.\n", rooms[target].name);
+            trigger_puzzle(rooms[target].puzzle_type);
+            return;
+        }
+    }
+
     player.current_room = target;
     printf("\n[안내] [%s](으)로 발걸음을 옮겼습니다.\n", rooms[player.current_room].name);
 
-    if (rand() % 4 == 0) {
-        printf("\n[함정 트리거!] 콰아앙!! 벽 뒤에서 핏기 없는 손이 튀어나왔습니다! 함정 귀신에게 당했습니다.\n");
+    // 평면도 기반 함정 타일 구역 밟았을 때 처리
+    if (rooms[player.current_room].trap_zone && (rand() % 2 == 0)) {
+        printf("\n[함정 트리거!] 콰아앙!! 평면도에 명시된 위험 타일입니다! 함정 귀신이 급습했습니다.\n");
         player.hp -= 2;
         printf("HP가 2 줄어들었습니다. (현재 HP: %d)\n", player.hp);
     } else {
@@ -252,19 +285,33 @@ void move_room() {
     }
 }
 
-// --- F키 상호작용 매트릭스 로직 ---
 void press_F_key() {
     Room *current = &rooms[player.current_room];
-    printf("\n[%c 키] 주변 오브젝트를 검사 및 상호작용합니다...\n", settings.key_inspect);
+    printf("\n[%c 키] 주변 오브젝트 및 바닥을 샅샅이 검사합니다...\n", settings.key_inspect);
 
-    // 1. 퍼즐 활성화 조건 만족
-    if (current->puzzle_type > 0 && player.solved_puzzles < current->puzzle_type) {
-        printf("[!] 전방에 기이한 고대 잠금 장치 및 퍼즐이 발견되었습니다!\n");
-        trigger_puzzle(current->puzzle_type);
-        return;
+    // 1. 평면도 기반 아이템 파싱 줍기 루프
+    if (current->has_holy_water) {
+        current->has_holy_water = 0;
+        player.has_holy_water = 1;
+        printf("\n[아이템 획득] 평면도에 표시된 마스터 침실 구석에서 붉은 보석을 약체화할 '성수'를 주웠습니다!\n");
+    }
+    if (current->has_weapon) {
+        current->has_weapon = 0;
+        player.has_weapon = 1;
+        printf("\n[아이템 획득] 평면도 침실 2 구석에서 핵을 파괴할 강력한 무기 '망치'를 주웠습니다!\n");
+    }
+    if (current->has_key) {
+        current->has_key = 0;
+        player.has_key = 1;
+        printf("\n[아이템 획득] 연구실/서재 책상 위에서 비밀방을 열 수 있는 '열쇠'를 주웠습니다!\n");
+    }
+    if (current->has_potion) {
+        current->has_potion = 0;
+        player.hp_potions++;
+        printf("\n[아이템 획득] 방 내부에서 유용한 단서와 함께 'HP 회복제'를 1개 주웠습니다!\n");
     }
 
-    // 2. 오브젝트 검사 -> 단서 일기(notes.dat) 출력 및 아이템 줍기 조건 만족
+    // 2. 오브젝트 검사 -> 단서 일기(notes.dat) 출력
     if (current->has_note && !current->is_searched) {
         current->is_searched = 1;
         player.notes_found++;
@@ -275,24 +322,14 @@ void press_F_key() {
         printf("[ID: %04d] 날짜: %s\n", origin_notes[idx].id, origin_notes[idx].date);
         printf("%s\n", origin_notes[idx].content);
         printf("==================================================\n");
-
-        if (player.notes_found == 3) {
-            printf("\n[아이템 획득] 일지 뒤쪽 제단 아래 숨겨져 있던 '성수'를 주웠습니다!\n");
-            player.has_holy_water = 1;
-        }
-        if (player.notes_found == 6) {
-            printf("\n[아이템 획득] 서재 벽면 안쪽 보관함에서 무기 '망치'를 주웠습니다!\n");
-            player.has_weapon = 1;
-        }
         return;
     }
 
-    // 3. 최종 방 상호작용 및 파괴
-    if (player.current_room == 9) {
-        printf("\n[경고] 저택 주인의 심장이자 악마와의 계약 증표인 '붉은 보석(핵)'이 피처럼 빛나고 있습니다.\n");
+    // 3. 최종 보스방 상호작용
+    if (player.current_room == 11) {
+        printf("\n[최종 장소] 저택 주인의 심장이자 악마와의 계약 증표인 '붉은 보석(핵)' 앞에 섰습니다.\n");
         if (!player.has_holy_water || !player.has_weapon) {
-            printf("[안내] 핵을 영구 파괴하려면 '성수(약체화)'와 '무기(망치)' 2개의 아이템이 전부 가방에 있어야 합니다.\n");
-            printf("방을 나가서 다른 방의 오브젝트를 마저 조사하세요.\n");
+            printf("[안내] 핵을 파괴하려면 가방에 마스터 침실의 '성수'와 침실 2의 '망치'가 모두 있어야 합니다.\n");
         } else {
             printf("성수를 뿌려 핵을 약체화 시킨 뒤, 망치로 내리쳐 산산조각 냅니다!!\n");
             player.solved_puzzles = 999; 
@@ -300,10 +337,9 @@ void press_F_key() {
         return;
     }
 
-    printf("특별한 장치나 흔적을 찾지 못했습니다. 방 구석구석을 다시 돌아보세요.\n");
+    printf("주변 조사를 마쳤습니다.\n");
 }
 
-// --- NPC(귀신) 대화 처리 분기 ---
 void check_ghost_encounter() {
     if (rand() % 3 != 0) return; 
 
@@ -339,6 +375,7 @@ void check_ghost_encounter() {
         case 4:
             printf("[귀신]: \"여기서 무얼 그렇게 훔쳐보고 다니는 거냐!\"\n");
             printf(" 1. 탈출할 방법을 찾고 있습니다.\n 2. 아무것도 안 했는데요.\n선택: ");
+            // 🛠️ [해결] 닫는 쌍따옴표 문자열 오류를 한 줄로 깔끔하게 닫았습니다.
             scanf("%d", &choice);
             if(choice == 2) { printf("[귀신]: \"내 앞에서 감히 거짓말을 쳐?!\"\n"); player.hp -= 3; }
             else { printf("[귀신]: \"솔직한 인간은 미워하지 않아.\"\n"); }
@@ -353,14 +390,25 @@ void check_ghost_encounter() {
     }
 }
 
-// --- 퍼즐 락 트리거 함수 ---
 void trigger_puzzle(int puzzle_type) {
     int ans;
     printf("\n==================================================\n");
     printf("               퍼즐 챌린지 락 활성화             \n");
     printf("==================================================\n");
 
-    if (puzzle_type == 2) { 
+    if (puzzle_type == 1) { 
+        printf("[서재 대수학 퍼즐] 다음 다항수식을 풀고 자연수 비밀번호를 구하라.\n");
+        printf(" a * b = 12\n b + c = d\n d - a = e\n e + c = 7\n");
+        printf("문제: 연속된 한자리 숫자 abcde의 5자리 비밀번호는? : ");
+        scanf("%d", &ans);
+        if (ans == 34152) {
+            printf("[성공] 정답입니다! 연구실 문의 잠금이 해제되었습니다.\n");
+            rooms[3].is_locked = 0;
+        } else {
+            printf("[실패] 잘못된 번호입니다! HP -1\n"); player.hp--;
+        }
+    }
+    else if (puzzle_type == 2) { 
         printf("[스위치 퍼즐] 다음 조건문을 읽고 알맞은 스위치 상태 조합을 맞추시오.\n");
         printf(" - 첫 번째 스위치는 마지막 스위치와 같은 상태다.\n");
         printf(" - 두 번째 스위치는 항상 꺼져(0) 있다.\n");
@@ -368,52 +416,26 @@ void trigger_puzzle(int puzzle_type) {
         printf("문제: 3자리 이진수 값을 입력하세요 (예: 101, 000 등): ");
         scanf("%d", &ans);
         if (ans == 101) {
-            printf("[성공] 철컥! 장치가 해제되었습니다.\n");
-            player.solved_puzzles++;
+            printf("[성공] 철컥! 마스터 침실 스위트의 장치가 해제되었습니다.\n");
+            rooms[9].is_locked = 0;
         } else {
             printf("[실패] 잘못된 전류가 흐릅니다! HP -1\n"); player.hp--;
         }
     }
     else if (puzzle_type == 3) { 
-        printf("[서재 대수학 퍼즐] 다음 다항수식을 풀고 자연수 비밀번호를 구하라.\n");
-        printf(" a * b = 12\n b + c = d\n d - a = e\n e + c = 7\n");
-        printf("문제: 연속된 한자리 숫자 abcde의 5자리 비밀번호는? : ");
-        scanf("%d", &ans);
-        if (ans == 34152) {
-            printf("[성공] 정답입니다! 금고가 열립니다.\n");
-            player.solved_puzzles++;
-        } else {
-            printf("[실패] 경보가 울립니다! HP -1\n"); player.hp--;
-        }
-    }
-    else if (puzzle_type == 4) { 
-        printf("[집사의 일지 퍼즐] 일지 내용의 분수를 계산하여 나이를 도출하라.\n");
-        printf(" \"내 인생의 1/6은 하인으로 보냈고, 그 후 1/3은 그분과 자라왔다.\n");
-        printf("  그 다음 1/7이 흐른 뒤 영원히 바치기로 맹세했고, 8년 후 심장이 만들어졌다.\"\n");
-        printf("문제: 이 기술서가 작성될 당시 사람의 나이는 몇 세인가?: ");
-        scanf("%d", &ans);
-        if (ans == 84) {
-            printf("[성공] 정답입니다! 벽면 통로가 열렸습니다.\n");
-            player.solved_puzzles++;
-        } else {
-            printf("[실패] 귀신의 비명이 들립니다. HP -1\n"); player.hp--;
-        }
-    }
-    else if (puzzle_type == 5) { 
-        printf("[사용인방 의료 기록] 다음 환자 상태를 보고 올바른 번호를 고르시오.\n");
+        printf("[창고방 의료 기록 퍼즐] 다음 환자 상태를 보고 올바른 번호를 고르시오.\n");
         printf(" \"조금만 움직여도 가슴이 답답하고 숨이 가쁘다. 약병과 물컵이 가득하다...\"\n");
         printf(" 1. 당뇨병  2. 빈혈  3. 심장병  4. 폐렴\n정답 선택: ");
         scanf("%d", &ans);
         if (ans == 3) {
-            printf("[성공] 탁자 수납장이 열렸습니다.\n");
-            player.solved_puzzles++;
+            printf("[성공] 통로 락이 해제되었습니다.\n");
+            rooms[10].is_locked = 0;
         } else {
             printf("[실패] 독가스가 분출됩니다. HP -1\n"); player.hp--;
         }
     }
 }
 
-// --- 옵션 설정 메뉴 ---
 void show_option_menu() {
     int choice, temp;
     while(1) {
@@ -441,7 +463,6 @@ void show_option_menu() {
     }
 }
 
-// --- 엔딩 조건 검사 ---
 void check_ending_condition() {
     if (player.solved_puzzles == 999) { 
         printf("\n==================================================\n");
