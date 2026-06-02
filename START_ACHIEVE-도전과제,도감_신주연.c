@@ -17,6 +17,27 @@
 #define NUM_ITEMS 20
 #define NUM_JOURNALS 15
 
+typedef struct
+{
+    int hp;
+    int maxHp;
+
+    int achievements[NUM_ACHIEVEMENTS];
+    int itemCollection[NUM_ITEMS];
+
+    int ghostAvoidStreak;
+    int checkpointCount;
+    int trapCount;
+    int puzzleFailCount;
+
+    int allPuzzleFirstTry;
+
+    int caughtByButler;
+
+    int collectedJournalCount;
+
+} Player;
+
 void showJournalPage(int page);
 // ============================================
 // 업적 이름
