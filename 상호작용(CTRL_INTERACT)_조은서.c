@@ -1,11 +1,11 @@
-// 필수 | F키: 아이템 줍기, NPC 대화, 퍼즐 활성화(오브젝트 검사→단서 출력)
-
-#define _CRT_SECURE_NO_WARNINGS
 #include <stdio.h>
-#include <time.h>
-#include <conio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <stdbool.h>
-#include <windows.h>
+#include <time.h>
+#include <unistd.h>   
+#include <termios.h>  
+#include <fcntl.h>    
 #include <math.h>
 
 // --- 시스템 설정 ---
@@ -34,7 +34,7 @@ int pX = 5, pY = 5, currentFloor = 1;
 int diaryCount = 0;
 bool gameRunning = true;
 
-// --- [데이터] 아이템 및 일기 배치 (이미지 기획 기반) ---
+// --- [데이터] 아이템 및 일기 배치 ---
 Diary diaries[15] = {
     {1, 5, 2, "Diary #1", "주인공 방 비밀 구석", false}, {1, 6, 2, "Diary #2", "주인공 방 비밀 구석", false}, {1, 7, 2, "Diary #3", "주인공 방 비밀 구석", false},
     {1, 10, 14, "Diary #4", "응접실 소파 사이", false}, {1, 3, 14, "Diary #5", "응접실 화분 아래", false},
@@ -55,9 +55,9 @@ const char* map1F[MAP_HEIGHT] = {
     "# [Main Room]     | [Stairs]  | [Utility]        #",
     "#                 |    (U)    |                  #",
     "#---------+-------|           |-------+----------#",
-    "#         |                           | Secret   #",
+    "#         |                   | Secret   #",
     "# [Hall]  |         [Main Hall]       | Path     #",
-    "#         |                           |          #",
+    "#         |                   |          #",
     "#---------+-------|           |-------+----------#",
     "#                 |           |                  #",
     "# [Reception]     | [Entrance]|      [Library]   #",
@@ -85,8 +85,40 @@ const char* map2F[MAP_HEIGHT] = {
 };
 
 void gotoxy(int x, int y) {
-    COORD pos = { (SHORT)x, (SHORT)y };
-    SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), pos);
+    // ANSI Escape Code를 사용하여 터미널 커서 위치 이동 (1부터 시작하므로 +1)
+    printf("\e[%d;%dH", y + 1, x + 1);
+}
+
+int _getch(void) {
+    struct termios oldt, newt;
+    int ch;
+    tcgetattr(STDIN_FILENO, &oldt);
+    newt = oldt;
+    newt.c_lflag &= ~(ICANON | ECHO);
+    tcsetattr(STDIN_FILENO, TCSANOW, &newt);
+    ch = getchar();
+    tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
+    return ch;
+}
+
+int _kbhit(void) {
+    struct termios oldt, newt;
+    int ch;
+    int oldf;
+    tcgetattr(STDIN_FILENO, &oldt);
+    newt = oldt;
+    newt.c_lflag &= ~(ICANON | ECHO);
+    tcsetattr(STDIN_FILENO, TCSANOW, &newt);
+    oldf = fcntl(STDIN_FILENO, F_GETFL, 0);
+    fcntl(STDIN_FILENO, F_SETFL, oldf | O_NONBLOCK);
+    ch = getchar();
+    tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
+    fcntl(STDIN_FILENO, F_SETFL, oldf);
+    if(ch != EOF) {
+        ungetc(ch, stdin);
+        return 1;
+    }
+    return 0;
 }
 
 void Render() {
@@ -94,8 +126,7 @@ void Render() {
     printf("==== Mansion Map [%dF] ====  Diary: %d/15\n", currentFloor, diaryCount);
     const char** curMap = (currentFloor == 1) ? map1F : map2F;
 
-    // 맵 렌더링 루프
-    int height = (currentFloor == 1) ? 16 : 12; // 층별 높이 다름 대응
+    int height = (currentFloor == 1) ? 16 : 12; 
     for (int y = 0; y < height; y++) {
         for (int x = 0; x < MAP_WIDTH; x++) {
             if (x == pX && y == pY) printf("P");
@@ -103,7 +134,7 @@ void Render() {
                 bool printed = false;
                 for (int i = 0; i < 15; i++) {
                     if (!diaries[i].is_collected && diaries[i].floor == currentFloor && diaries[i].x == x && diaries[i].y == y) {
-                        printf("?"); // 조사 포인트
+                        printf("?"); 
                         printed = true; break;
                     }
                 }
@@ -128,36 +159,36 @@ void CTRL_INTERACT() {
         if (!diaries[i].is_collected && diaries[i].floor == currentFloor && abs(pX - diaries[i].x) <= 1 && abs(pY - diaries[i].y) <= 1) {
             diaries[i].is_collected = true;
             diaryCount++;
-            system("cls");
+            printf("\e[1;1H\e[2J");
             printf("\n[ Item Found: %s ]\nLocation: %s\nContent: (Diary details...)\n", diaries[i].name, diaries[i].hint);
             printf("\nPress any key to return...");
-            _getch(); system("cls");
+            _getch(); printf("\e[1;1H\e[2J");
             found = true; break;
         }
     }
     for (int i = 0; i < 2; i++) {
         if (!keys[i].is_collected && keys[i].floor == currentFloor && abs(pX - keys[i].x) <= 1 && abs(pY - keys[i].y) <= 1) {
             keys[i].is_collected = true;
-            system("cls");
+            printf("\e[1;1H\e[2J");
             printf("\n[ Key Found: %s ]\nYou can now open locked doors.\n", keys[i].name);
             printf("\nPress any key to return...");
-            _getch(); system("cls");
+            _getch(); printf("\e[1;1H\e[2J");
             found = true; break;
         }
     }
     // 계단 상호작용
     if (pX >= 20 && pX <= 30 && pY <= 2) {
         currentFloor = (currentFloor == 1) ? 2 : 1;
-        system("cls");
+        printf("\e[1;1H\e[2J");
         printf("\n[ Moving to Floor %d... ]\n", currentFloor);
-        Sleep(500); system("cls");
+        usleep(500000); printf("\e[1;1H\e[2J");
         found = true;
     }
 }
 
 int main() {
-    CONSOLE_CURSOR_INFO ci = { 100, FALSE };
-    SetConsoleCursorInfo(GetStdHandle(STD_OUTPUT_HANDLE), &ci);
+    printf("\e[?25l"); 
+    printf("\e[1;1H\e[2J");
 
     while (gameRunning) {
         Render();
@@ -170,7 +201,9 @@ int main() {
             if (key == 'd' || key == 'D') pX++;
             if (key == 'f' || key == 'F') CTRL_INTERACT();
         }
-        Sleep(50);
+        usleep(50000); // 50ms 대기
     }
+
+    printf("\e[?25h"); // 종료 전 커서 다시 보이기
     return 0;
 }
