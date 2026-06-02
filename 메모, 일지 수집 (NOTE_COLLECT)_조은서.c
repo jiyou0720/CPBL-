@@ -3,9 +3,9 @@
 #include <string.h>
 #include <stdbool.h>
 #include <time.h>
-#include <unistd.h>    // 리눅스 표준 시스템 콜 (usleep)
-#include <termios.h>   // 터미널 속성 제어 (getch, kbhit 구현용)
-#include <fcntl.h>     // 파일 제어 플래그 (kbhit 논블로킹 설정용)
+#include <unistd.h>   
+#include <termios.h>   /
+#include <fcntl.h>     
 
 // --- 시스템 설정 ---
 #define MAP_WIDTH 50
@@ -81,7 +81,7 @@ void START_RANK() {
         SaveDummyData();
         fp = fopen("rank.dat", "rb");
         if (fp == NULL) {
-            printf("\e[1;1H\e[2J"); // 리눅스 네이티브 화면 클리어
+            printf("\e[1;1H\e[2J"); 
             printf("\n[오류] 랭킹 데이터를 로드할 수 없습니다.\n");
             printf("아무 키나 누르면 메뉴로 복귀합니다.");
             _getch();
