@@ -1,7 +1,3 @@
-// 1. 리눅스 GCC에서 기만적인 POSIX 표준 함수(usleep 등)를 컴파일하기 위한 매크로 선언 (최상단 필수)
-#define _DEFAULT_SOURCE
-#define _XOPEN_SOURCE 500
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
@@ -107,9 +103,7 @@ int main() {
 
         HUD_TIME(start_time, accumulated_time, is_running);
 
-        // 2. 에러 방지를 위한 표준 지연 처리 방식 적용 (0.2초)
-        struct timespec ts = {0, 200000000}; 
-        nanosleep(&ts, NULL);
+        usleep(200000); 
     }
 
     printf("\e[1;1H\e[2J");
