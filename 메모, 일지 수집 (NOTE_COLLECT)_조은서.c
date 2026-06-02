@@ -4,7 +4,7 @@
 #include <stdbool.h>
 #include <time.h>
 #include <unistd.h>   
-#include <termios.h>   /
+#include <termios.h>  
 #include <fcntl.h>     
 
 // --- 시스템 설정 ---
