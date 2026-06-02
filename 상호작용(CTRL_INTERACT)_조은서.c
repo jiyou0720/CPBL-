@@ -338,4 +338,123 @@ void check_ghost_encounter() {
             break;
         case 4:
             printf("[귀신]: \"여기서 무얼 그렇게 훔쳐보고 다니는 거냐!\"\n");
-            printf(" 1. 탈출할 방법을 찾고 있습니다.\n 2. 아무것도
+            printf(" 1. 탈출할 방법을 찾고 있습니다.\n 2. 아무것도 안 했는데요.\n선택: ");
+            scanf("%d", &choice);
+            if(choice == 2) { printf("[귀신]: \"내 앞에서 감히 거짓말을 쳐?!\"\n"); player.hp -= 3; }
+            else { printf("[귀신]: \"솔직한 인간은 미워하지 않아.\"\n"); }
+            break;
+        case 5:
+            printf("[귀신]: \"그 손에 든 부서진 단서 조각들... 나한테 넘겨줄래...?\"\n");
+            printf(" 1. 여기 있습니다, 가져가세요.\n 2. (재빨리 뒤로 도망친다.)\n선택: ");
+            scanf("%d", &choice);
+            if(choice == 2) { printf("[귀신]: \"어딜 도망가려고!!\"\n"); player.hp -= 2; }
+            else { printf("[귀신]: \"착하네... 가련해서 불쌍하니 뺏어가진 않을게.\"\n"); }
+            break;
+    }
+}
+
+// --- 퍼즐 락 트리거 함수 ---
+void trigger_puzzle(int puzzle_type) {
+    int ans;
+    printf("\n==================================================\n");
+    printf("               퍼즐 챌린지 락 활성화             \n");
+    printf("==================================================\n");
+
+    if (puzzle_type == 2) { 
+        printf("[스위치 퍼즐] 다음 조건문을 읽고 알맞은 스위치 상태 조합을 맞추시오.\n");
+        printf(" - 첫 번째 스위치는 마지막 스위치와 같은 상태다.\n");
+        printf(" - 두 번째 스위치는 항상 꺼져(0) 있다.\n");
+        printf(" - 세 번째 스위치는 작동 중(1)이다.\n");
+        printf("문제: 3자리 이진수 값을 입력하세요 (예: 101, 000 등): ");
+        scanf("%d", &ans);
+        if (ans == 101) {
+            printf("[성공] 철컥! 장치가 해제되었습니다.\n");
+            player.solved_puzzles++;
+        } else {
+            printf("[실패] 잘못된 전류가 흐릅니다! HP -1\n"); player.hp--;
+        }
+    }
+    else if (puzzle_type == 3) { 
+        printf("[서재 대수학 퍼즐] 다음 다항수식을 풀고 자연수 비밀번호를 구하라.\n");
+        printf(" a * b = 12\n b + c = d\n d - a = e\n e + c = 7\n");
+        printf("문제: 연속된 한자리 숫자 abcde의 5자리 비밀번호는? : ");
+        scanf("%d", &ans);
+        if (ans == 34152) {
+            printf("[성공] 정답입니다! 금고가 열립니다.\n");
+            player.solved_puzzles++;
+        } else {
+            printf("[실패] 경보가 울립니다! HP -1\n"); player.hp--;
+        }
+    }
+    else if (puzzle_type == 4) { 
+        printf("[집사의 일지 퍼즐] 일지 내용의 분수를 계산하여 나이를 도출하라.\n");
+        printf(" \"내 인생의 1/6은 하인으로 보냈고, 그 후 1/3은 그분과 자라왔다.\n");
+        printf("  그 다음 1/7이 흐른 뒤 영원히 바치기로 맹세했고, 8년 후 심장이 만들어졌다.\"\n");
+        printf("문제: 이 기술서가 작성될 당시 사람의 나이는 몇 세인가?: ");
+        scanf("%d", &ans);
+        if (ans == 84) {
+            printf("[성공] 정답입니다! 벽면 통로가 열렸습니다.\n");
+            player.solved_puzzles++;
+        } else {
+            printf("[실패] 귀신의 비명이 들립니다. HP -1\n"); player.hp--;
+        }
+    }
+    else if (puzzle_type == 5) { 
+        printf("[사용인방 의료 기록] 다음 환자 상태를 보고 올바른 번호를 고르시오.\n");
+        printf(" \"조금만 움직여도 가슴이 답답하고 숨이 가쁘다. 약병과 물컵이 가득하다...\"\n");
+        printf(" 1. 당뇨병  2. 빈혈  3. 심장병  4. 폐렴\n정답 선택: ");
+        scanf("%d", &ans);
+        if (ans == 3) {
+            printf("[성공] 탁자 수납장이 열렸습니다.\n");
+            player.solved_puzzles++;
+        } else {
+            printf("[실패] 독가스가 분출됩니다. HP -1\n"); player.hp--;
+        }
+    }
+}
+
+// --- 옵션 설정 메뉴 ---
+void show_option_menu() {
+    int choice, temp;
+    while(1) {
+        printf("\n==================================================\n");
+        printf("              [ ESC - 게임 옵션 설정 ]            \n");
+        printf("==================================================\n");
+        printf(" 1. 배경 음악 (BGM) 상태 : %s\n", settings.bgm_on ? "ON" : "OFF");
+        printf(" 2. 게임 효과음 (SFX) 상태 : %s\n", settings.sfx_on ? "ON" : "OFF");
+        printf(" 3. 시스템 마스터 볼륨    : [%d%%]\n", settings.master_volume);
+        printf(" 4. 대사/텍스트 출력 속도 : %s\n", settings.text_speed == 2 ? "보통" : "빠름");
+        printf(" 0. 설정 종료 (게임으로 복귀)\n");
+        printf("==================================================\n");
+        printf("번호 선택: ");
+        if (scanf("%d", &choice) != 1) { while(getchar() != '\n'); continue; }
+
+        if (choice == 0) break;
+        if (choice == 1) settings.bgm_on = !settings.bgm_on;
+        if (choice == 2) settings.sfx_on = !settings.sfx_on;
+        if (choice == 3) {
+            printf("새 볼륨 수치(0~100): ");
+            scanf("%d", &temp);
+            if(temp>=0 && temp<=100) settings.master_volume = temp;
+        }
+        if (choice == 4) settings.text_speed = (settings.text_speed == 2) ? 3 : 2;
+    }
+}
+
+// --- 엔딩 조건 검사 ---
+void check_ending_condition() {
+    if (player.solved_puzzles == 999) { 
+        printf("\n==================================================\n");
+        printf(" [진실의 문 인터랙션] 붉은 보석이 산산이 부서집니다.\n");
+        printf(" 저택의 주인이자 공간 자체였던 핵이 뒤틀리며 집사가 절규합니다.\n");
+        printf(" \"안 돼... 그건 주인님의 영혼이자 내 유일한 가족이란 말이다!!\"\n");
+        printf(" 무너지는 저택을 탈출하여 뒤를 돌아보자 거대한 건물이 증발했습니다.\n");
+        printf("==================================================\n");
+        
+        printf("\n바지 주머니에서 갑자기 진동과 벨소리가 울립니다. 핸드폰이 터집니다.\n");
+        printf("[친구] \"야! 너 어디야? 갑자기 안개가 심해져서 놓쳤잖아! 우리 다 밑에서 기다려.\"\n");
+        printf("[주인공] \"어... 미안. 길을 좀 헤맸어. 이제 다 끝났으니까... 가자.\"\n");
+        printf("\n[해피엔딩: 살아남은 자] 성공적으로 저택의 원혼들을 구원하고 탈출했습니다!\n");
+        exit(0);
+    }
+}
