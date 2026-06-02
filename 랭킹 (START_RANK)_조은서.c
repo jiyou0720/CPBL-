@@ -1,227 +1,66 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <stdbool.h>
-#include <time.h>
-#include <unistd.h>   
-#include <termios.h>  
-#include <fcntl.h>    
-
-// --- 시스템 설정 ---
-#define MAP_WIDTH 50
-#define MAP_HEIGHT 18
-
-// --- 구조체 정의 ---
-typedef struct {
-    char name[20];       // 유저 이름
-    double time;         // 클리어 시간 (초)
-    char difficulty[15]; // 난이도
-} PlayerRank;
-
-// --- 글로벌 변수 ---
-int pX = 5, pY = 5;
-int diaryCount = 0;
-bool gameRunning = true;
-clock_t gameStartTime;
-double totalPausedTime = 0.0;
-
-// --- 리눅스 전용 입력 함수 (getch & kbhit) ---
-int _getch(void) {
-    struct termios oldt, newt;
-    int ch;
-    tcgetattr(STDIN_FILENO, &oldt);
-    newt = oldt;
-    newt.c_lflag &= ~(ICANON | ECHO);
-    tcsetattr(STDIN_FILENO, TCSANOW, &newt);
-    ch = getchar();
-    tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
-    return ch;
-}
-
-int _kbhit(void) {
-    struct termios oldt, newt;
-    int ch;
-    int oldf;
-    tcgetattr(STDIN_FILENO, &oldt);
-    newt = oldt;
-    newt.c_lflag &= ~(ICANON | ECHO);
-    tcsetattr(STDIN_FILENO, TCSANOW, &newt);
-    oldf = fcntl(STDIN_FILENO, F_GETFL, 0);
-    fcntl(STDIN_FILENO, F_SETFL, oldf | O_NONBLOCK);
-    ch = getchar();
-    tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
-    fcntl(STDIN_FILENO, F_SETFL, oldf);
-    if(ch != EOF) {
-        ungetc(ch, stdin);
-        return 1;
-    }
-    return 0;
-}
-
-// --- [기능 구현] 4. START_RANK (랭킹 시스템) ---
-void SaveDummyData() {
-    FILE* fp = fopen("rank.dat", "wb");
-    if (fp == NULL) return;
-
-    PlayerRank dummy[5] = {
-        {"Alice", 124.5, "Normal"},
-        {"Bob", 89.2, "Easy"},
-        {"Charlie", 210.0, "Hard"},
-        {"Player1", 155.3, "Normal"},
-        {"SpeedRun", 45.7, "Easy"}
-    };
-    fwrite(dummy, sizeof(PlayerRank), 5, fp);
-    fclose(fp);
-}
-
-void START_RANK() {
-    FILE* fp = fopen("rank.dat", "rb");
-
-    // 파일이 없으면 더미 데이터 자동 생성 후 재오픈
-    if (fp == NULL) {
-        SaveDummyData();
-        fp = fopen("rank.dat", "rb");
-        if (fp == NULL) {
-            printf("\e[1;1H\e[2J"); // 리눅스 고속 화면 초기화
-            printf("\n[오류] 랭킹 데이터를 로드할 수 없습니다.\n");
-            printf("아무 키나 누르면 메뉴로 복귀합니다.");
-            _getch();
-            return;
-        }
-    }
-
-    PlayerRank ranks[100];
-    int count = 0;
-
-    while (fread(&ranks[count], sizeof(PlayerRank), 1, fp) == 1) {
-        count++;
-        if (count >= 100) break;
-    }
-    fclose(fp);
-
-    // 정렬 (시간 짧은 순 - 오름차순)
-    for (int i = 0; i < count - 1; i++) {
-        for (int j = 0; j < count - i - 1; j++) {
-            if (ranks[j].time > ranks[j + 1].time) {
-                PlayerRank temp = ranks[j];
-                ranks[j] = ranks[j + 1];
-                ranks[j + 1] = temp;
-            }
-        }
-    }
-
-    // 출력 화면 렌더링
+// --- 실시간으로 게임 클리어 기록을 추가하는 함수 ---
+void AddNewRecord(double finalTime, const char* diff) {
     printf("\e[1;1H\e[2J");
     printf("\n");
     printf("  ======================================================\n");
-    printf("  ║                명예의 전당 (TOP 10)                ║\n");
+    printf("  🎉 저택을 성공적으로 탈출하셨습니다! 축하합니다!\n");
     printf("  ======================================================\n");
-    printf("     순위     이름           클리어 시간     난이도\n");
-    printf("  ------------------------------------------------------\n");
-
-    int displayCount = (count < 10) ? count : 10;
-    if (displayCount == 0) {
-        printf("     등록된 랭킹 기록이 없습니다.\n");
+    
+    PlayerRank newPlayer;
+    newPlayer.time = finalTime;
+    strcpy(newPlayer.difficulty, diff);
+    
+    // 1. 실시간 이름 입력받기
+    printf("  ▶ 명예의 전당에 등록할 이름을 입력하세요 (최대 19자): ");
+    // 공백 없는 문자열을 안전하게 입력받음
+    if (scanf("%19s", newPlayer.name) != 1) {
+        strcpy(newPlayer.name, "Unknown");
     }
-    else {
-        for (int i = 0; i < displayCount; i++) {
-            if (i == 0)      printf("      1등    ");
-            else if (i == 1) printf("      2등    ");
-            else if (i == 2) printf("      3등    ");
-            else             printf("      %d등    ", i + 1);
+    // scanf 버퍼 비우기
+    while (getchar() != '\n'); 
 
-            printf("%-12s   %7.1f초       %-10s\n",
-                ranks[i].name, ranks[i].time, ranks[i].difficulty);
+    // 2. 기존 기록 다 읽어오기
+    PlayerRank list[100];
+    int count = 0;
+    
+    FILE* fp = fopen("rank.dat", "rb");
+    if (fp != NULL) {
+        while (count < 99 && fread(&list[count], sizeof(PlayerRank), 1, fp) == 1) {
+            count++;
         }
+        fclose(fp);
     }
-    printf("  ------------------------------------------------------\n");
-    printf("\n  ▶ 아무 키나 누르면 일시정지 메뉴로 돌아갑니다.");
-    _getch();
-    printf("\e[1;1H\e[2J");
-}
 
-// --- 기본 게임 화면 출력 헬퍼 ---
-void DrawGameScreen(double currentPlayTime) {
-    printf("\e[1;1H\e[2J");
-    printf("==== Mansion Map [1F] ====  Diary: %d/15\n", diaryCount);
-    printf(" 플레이어 궤적 추적 중... (현재 위치: %d, %d)\n", pX, pY);
-    printf(" [실제 플레이 시간: %.1f초]\n\n", currentPlayTime);
-    printf(" [WASD] 이동  |  [ESC] 일시정지 메뉴 열기\n");
-}
+    // 3. 새 플레이어 기록을 리스트 마지막에 병합
+    list[count] = newPlayer;
+    count++;
 
-// --- 메인 함수 ---
-int main() {
-    printf("\e[?25l"); 
-    printf("\e[1;1H\e[2J");
-
-    char CTRL_PAUSE;
-    bool isMenuOpen = false;
-    gameStartTime = clock();
-
-    while (gameRunning) {
-        // 1. 일반 인게임 루프
-        if (!isMenuOpen) {
-            double playTime = ((double)(clock() - gameStartTime) / CLOCKS_PER_SEC) - totalPausedTime;
-            DrawGameScreen(playTime);
-
-            if (_kbhit()) {
-                int key = _getch();
-                if (key == 27) { // ESC 입력 감지
-                    isMenuOpen = true;
-                }
-                // 플레이어 임의 이동 (테스트용)
-                else if (key == 'w' || key == 'W') pY--;
-                else if (key == 's' || key == 'S') pY++;
-                else if (key == 'a' || key == 'A') pX--;
-                else if (key == 'd' || key == 'D') pX++;
-            }
-            usleep(80000); // 80ms 대기
-            continue;
-        }
-
-        // 2. ESC 일시정지 시스템 메뉴 루프
-        clock_t pauseStartTime = clock();
-        printf("\e[1;1H\e[2J");
-
-        printf("\n");
-        printf("    ==================================================\n");
-        printf("    ║                   GAME PAUSED                  ║\n");
-        printf("    ==================================================\n");
-        printf("    ║                                                ║\n");
-        printf("    ║   [1] REPLAY  - 게임 재개                      ║\n");
-        printf("    ║   [2] OPTION  - 게임 옵션 및 설정              ║\n");
-        printf("    ║   [3] BOOK    - 도감 열람                      ║\n");
-        printf("    ║   [4] RANK    - 명예의 전당 (랭킹)             ║\n");
-        printf("    ║   [5] TITLE   - 타이틀 화면으로 복귀           ║\n");
-        printf("    ║                                                ║\n");
-        printf("    ==================================================\n");
-        printf("    ▶ 명령을 선택하세요 (1~5): ");
-
-        CTRL_PAUSE = _getch();
-
-        if (CTRL_PAUSE == '1') {
-            clock_t pauseEndTime = clock();
-            totalPausedTime += (double)(pauseEndTime - pauseStartTime) / CLOCKS_PER_SEC;
-            isMenuOpen = false;
-            printf("\e[1;1H\e[2J");
-        }
-        else if (CTRL_PAUSE == '2' || CTRL_PAUSE == '3') {
-            printf("\n    준비 중인 기능입니다. 아무 키나 누르세요.");
-            _getch();
-        }
-        else if (CTRL_PAUSE == '4') {
-            START_RANK();
-        }
-        else if (CTRL_PAUSE == '5') {
-            printf("\n    [SYSTEM] 정말 종료하시겠습니까? (Y/N): ");
-            char confirm = _getch();
-            if (confirm == 'y' || confirm == 'Y') {
-                printf("\e[?25h"); // 종료 전 터미널 커서 다시 켜기
-                exit(0);
+    // 4. 버블 정렬 (시간 기준 오름차순)
+    for (int i = 0; i < count - 1; i++) {
+        for (int j = 0; j < count - i - 1; j++) {
+            if (list[j].time > list[j + 1].time) {
+                PlayerRank temp = list[j];
+                list[j] = list[j + 1];
+                list[j + 1] = temp;
             }
         }
+    }
+
+    // 5. 정렬된 전체 기록 중에서 최대 상위 10개만 파일에 새로 저장
+    fp = fopen("rank.dat", "wb");
+    if (fp == NULL) {
+        printf("\n[오류] 랭킹을 실시간으로 업데이트하지 못했습니다.\n");
+        return;
     }
     
-    printf("\e[?25h"); // 정상 탈출 시 커서 복구
-    return 0;
+    int saveCount = (count < 10) ? count : 10;
+    fwrite(list, sizeof(PlayerRank), saveCount, fp);
+    fclose(fp);
+
+    printf("\n  [SYSTEM] 실시간 데이터 저장이 완료되었습니다!\n");
+    printf("  아무 키나 누르면 명예의 전당을 확인합니다.");
+    _getch();
+
+    // 6. 저장 완료 후 바로 화면에 랭킹판 띄워주기
+    START_RANK();
 }
