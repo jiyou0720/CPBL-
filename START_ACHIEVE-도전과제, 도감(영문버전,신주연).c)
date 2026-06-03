@@ -1,0 +1,364 @@
+// ============================================
+// achievement_collection.c
+// Part 1 + Part 2 (English Version)
+// Linux Compatible
+// ============================================
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+
+// ============================================
+// Settings
+// ============================================
+
+#define NUM_ACHIEVEMENTS 11
+#define NUM_ITEMS 20
+#define NUM_JOURNALS 15
+
+typedef struct
+{
+    int hp;
+    int maxHp;
+
+    int achievements[NUM_ACHIEVEMENTS];
+    int itemCollection[NUM_ITEMS];
+
+    int ghostAvoidStreak;
+    int checkpointCount;
+    int trapCount;
+    int puzzleFailCount;
+
+    int allPuzzleFirstTry;
+
+    int caughtByButler;
+
+    int collectedJournalCount;
+
+} Player;
+
+void showJournalPage(int page);
+
+// ============================================
+// Achievement Names
+// ============================================
+
+const char* achNames[NUM_ACHIEVEMENTS] =
+{
+    "Ghost Whisperer",
+    "The Truth Revealed",
+    "Pathetic Death",
+    "Survivor",
+    "Reincarnated?",
+    "Coward?",
+    "Trap Victim",
+    "Failure is Okay",
+    "Puzzle Master?",
+    "Invisible Human",
+    "Irresistible Temptation"
+};
+
+// ============================================
+// Achievement Descriptions
+// ============================================
+
+const char* achDescs[NUM_ACHIEVEMENTS] =
+{
+    "Avoid ghost damage 10 times in a row",
+    "Collect all servant journals",
+    "Reach the Bad Ending",
+    "Reach the Good Ending",
+    "Recover HP while at 1 HP",
+    "Use checkpoints 5 times or more",
+    "Get caught in traps 5 times or more",
+    "Fail puzzles 5 times or more",
+    "Solve all puzzles on the first try",
+    "Never get caught by the butler",
+    "Accept the ghost's temptation"
+};
+
+// ============================================
+// Unlock Achievement
+// ============================================
+
+void unlockAchievement(Player* p, int idx)
+{
+    if(idx < 0 || idx >= NUM_ACHIEVEMENTS)
+        return;
+
+    if(p->achievements[idx])
+        return;
+
+    p->achievements[idx] = 1;
+
+    printf("\n");
+    printf("=====================================\n");
+    printf("     Achievement Unlocked!\n");
+    printf("   %s\n", achNames[idx]);
+    printf("=====================================\n");
+
+    usleep(1200000);
+}
+
+// ============================================
+// Ghost streak system
+// ============================================
+
+void surviveGhost(Player* p)
+{
+    p->ghostAvoidStreak++;
+
+    if(p->ghostAvoidStreak >= 10)
+        unlockAchievement(p, 0);
+}
+
+void damagedByGhost(Player* p)
+{
+    p->ghostAvoidStreak = 0;
+}
+
+// ============================================
+
+void triggerBadEnding(Player* p)
+{
+    unlockAchievement(p, 2);
+}
+
+void triggerGoodEnding(Player* p)
+{
+    unlockAchievement(p, 3);
+}
+
+// ============================================
+
+void useHealingItemAchievement(Player* p)
+{
+    if(p->hp == 1)
+        unlockAchievement(p, 4);
+}
+
+void openCheckpointMenu(Player* p)
+{
+    p->checkpointCount++;
+
+    if(p->checkpointCount >= 5)
+        unlockAchievement(p, 5);
+}
+
+void triggerTrap(Player* p)
+{
+    p->trapCount++;
+
+    if(p->trapCount >= 5)
+        unlockAchievement(p, 6);
+}
+
+void failPuzzle(Player* p)
+{
+    p->puzzleFailCount++;
+
+    if(p->puzzleFailCount >= 5)
+        unlockAchievement(p, 7);
+}
+
+void clearPuzzleFirstTry(Player* p)
+{
+    if(p->allPuzzleFirstTry)
+        unlockAchievement(p, 8);
+}
+
+void caughtByButler(Player* p)
+{
+    p->caughtByButler = 1;
+}
+
+void checkInvisibleAchievement(Player* p)
+{
+    if(p->caughtByButler == 0)
+        unlockAchievement(p, 9);
+}
+
+void acceptGhostTemptation(Player* p)
+{
+    unlockAchievement(p, 10);
+}
+
+// ============================================
+// Item System
+// ============================================
+
+enum
+{
+    ITEM_HEAL_POTION = 0,
+    ITEM_HOLY_WATER,
+    ITEM_HAMMER,
+    ITEM_NORMAL_KEY,
+    ITEM_SECRET_KEY
+};
+
+const char* itemNames[NUM_ITEMS] =
+{
+    "Health Potion",
+    "Holy Water",
+    "Hammer",
+    "Normal Key",
+    "Secret Room Key",
+
+    "Servant Journal 1",
+    "Servant Journal 2",
+    "Servant Journal 3",
+    "Servant Journal 4",
+    "Servant Journal 5",
+    "Servant Journal 6",
+    "Servant Journal 7",
+    "Servant Journal 8",
+    "Servant Journal 9",
+    "Servant Journal 10",
+    "Servant Journal 11",
+    "Servant Journal 12",
+    "Servant Journal 13",
+    "Servant Journal 14",
+    "Servant Journal 15"
+};
+
+void obtainItem(Player* p, int itemID)
+{
+    if(itemID < 0 || itemID >= NUM_ITEMS)
+        return;
+
+    if(p->itemCollection[itemID])
+        return;
+
+    p->itemCollection[itemID] = 1;
+
+    printf("\n=====================================\n");
+    printf("      New Item Found!\n");
+    printf("        %s\n", itemNames[itemID]);
+    printf("=====================================\n");
+
+    usleep(1000000);
+}
+
+int hasItem(Player* p, int itemID)
+{
+    if(itemID < 0 || itemID >= NUM_ITEMS)
+        return 0;
+
+    return p->itemCollection[itemID];
+}
+
+void removeItem(Player* p, int itemID)
+{
+    if(itemID < 0 || itemID >= NUM_ITEMS)
+        return;
+
+    p->itemCollection[itemID] = 0;
+}
+
+// ============================================
+// Journal Texts (ENGLISH TRANSLATION)
+// ============================================
+
+const char* journalTexts[NUM_JOURNALS] =
+{
+    "The mansion is peaceful today as well.\n\n"
+    "The master is walking in the garden with his wife as usual.\n\n"
+    "The butler continues his duties without change.\n\n"
+    "There was more work than usual today,\n\n"
+    "but the atmosphere of the mansion felt oddly bright.",
+
+    "I heard stories about the butler from other servants.\n\n"
+    "He has no family and has served in this mansion since childhood.\n\n"
+    "He and the master grew up together,\n"
+    "almost like family rather than servant and owner.\n\n"
+    "That is why he always stays by the master's side.",
+
+    "While working as usual, something unexpected happened.\n\n"
+    "The master's wife collapsed during a walk.\n\n"
+    "No one saw it coming.\n\n"
+    "The mansion fell into chaos,\n\n"
+    "and I could not focus on my work.",
+
+    "Since her collapse,\n"
+    "the atmosphere of the mansion has slowly changed.\n\n"
+    "Even the doctor said her heart condition is worsening.\n\n"
+    "The master locked himself in the library,\n"
+    "and the butler never leaves his side.",
+
+    "Strange things have been happening recently.\n\n"
+    "Servants I knew suddenly disappeared,\n\n"
+    "and my anxiety keeps growing.",
+
+    "I witnessed something strange near the library today.\n\n"
+    "Through the gap in the door,\n"
+    "I saw the master speaking with someone.\n\n"
+    "And the butler's eyes were not the same as before.",
+
+    "People are disappearing one by one.\n\n"
+    "At first, I thought they had gone out or resigned.\n\n"
+    "But no one has been seen since.",
+
+    "I saw it clearly today.\n\n"
+    "A missing servant stood at the end of the hallway.\n\n"
+    "But it was no longer human.\n\n"
+    "Even after I ran away, that image remains in my mind.",
+
+    "I am confused.\n\n"
+    "What are the master and butler thinking?\n\n"
+    "The number of servants is decreasing,\n"
+    "making it hard to maintain the mansion.",
+
+    "Strange voices have started to be heard.\n\n"
+    "At first, I thought it was the wind.\n\n"
+    "But gradually, the voices became clear.\n\n"
+    "'This place is dangerous.'\n\n"
+    "'You must leave.'",
+
+    "I realized something.\n\n"
+    "The voices I hear are from the missing people.\n\n"
+    "They seem unable to leave this mansion.",
+
+    "I tried to escape today.\n\n"
+    "The doors were locked and would not open.\n\n"
+    "The back door was the same.",
+
+    "The voices of the missing people keep speaking to me.\n\n"
+    "'You must destroy it.'\n\n"
+    "'It is there.'\n\n"
+    "I do not know what they mean.",
+
+    "I met the butler today.\n\n"
+    "He said nothing,\n"
+    "but his cold gaze said everything.\n\n"
+    "He knows.\n\n"
+    "That I am getting closer to the truth.",
+
+    "There is no more time left.\n\n"
+    "I will escape this mansion.\n\n"
+    "Find the heart they spoke of.\n\n"
+    "And end all of this.\n\n"
+    "I hear footsteps.\n\n"
+    "Someone is coming."
+};
+
+// ============================================
+// Journal UI
+// ============================================
+
+void showJournalPage(int page)
+{
+    if(page < 1 || page > NUM_JOURNALS)
+        return;
+
+    system("clear");
+
+    printf("=====================================\n");
+    printf("        Servant Journal %d\n", page);
+    printf("=====================================\n\n");
+
+    printf("%s\n", journalTexts[page - 1]);
+
+    printf("\nPress Enter...");
+    getchar();
+}
