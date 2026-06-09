@@ -1,0 +1,668 @@
+    1  ls
+    2  cd /
+    3  ls
+    4  cd media/jiyou/
+    5  ls
+    6  cd VBox_GAs_7.2.6/
+    7  ls
+    8  sudo apt update
+    9  sudo apt upgrade
+   10  ./autorun.sh
+   11  sudo apt install build-essential dkms linux-headers-$(uname -r)
+   12  sudo sh /media/$USER/VBoxLinuxAdditions.run
+   13  sudo sh /media/$USER/Vbox_GAs_/VBoxLinuxAdditions.run
+   14  ;s
+   15  ls
+   16  sudo sh /media/$USER/Vbox_GAs_7.2.6/VBoxLinuxAdditions.run
+   17  cd /
+   18  sudo sh /media/$USER/Vbox_GAs_7.2.6/VBoxLinuxAdditions.run
+   19  cd /media/jiyou/
+   20  ls
+   21  sudo sh /media/$USER/VBox_GAs_7.2.6/VBoxLinuxAdditions.run
+   22  sudo reboot
+   23  cd /
+   24  ssh bandit0@bandit.labs.overthewire.org -p2220
+   25  su
+   26  sudo passwd 5154
+   27  su root
+   28  sudo passwd
+   29  sudo su
+   30  su
+   31  ls -a
+   32  ls -al
+   33  su
+   34  ls
+   35  ls -al
+   36  ls
+   37  clear
+   38  cmd
+   39  pwd
+   40  ls
+   41  ls -al
+   42  cd
+   43  cls
+   44  clear
+   45  sudo apt update
+   46  cls
+   47  clear
+   48  help
+   49  ssh help
+   50  man ssg
+   51  man ssh
+   52  clear
+   53  exit
+   54  su passwd
+   55  passwd
+   56  clear
+   57  la
+   58  ls
+   59  cd /
+   60  ls
+   61  sudo apt update
+   62  sudo apt upgread
+   63  sudo apt upgrad
+   64  sudo apt upgrade
+   65  apt-get update
+   66  ?
+   67  clear
+   68  sudo apt 
+   69  sudo apt upgrade
+   70  su
+   71  sudo apt update
+   72  sudo apt upgrade
+   73  cls
+   74  clear
+   75  ls
+   76  ls -al
+   77  ls -a
+   78  cd .
+   79  cd /
+   80  ls
+   81  cat home
+   82  cat swap.img
+   83  cat ~
+   84  cd .
+   85  cd ~
+   86  ls
+   87  ls 0al
+   88  ls -al
+   89  ls -a
+   90  cat .bash
+   91  cat .bash_history 
+   92  cd ~
+   93  cd /
+   94  ls
+   95  cd rppt
+   96  cd root
+   97  ;s
+   98  ls
+   99  su
+  100  ibus-setup
+  101  ls
+  102  cd Downloads/
+  103  ls
+  104  cat code_1.111.0-1772846623_amd64.deb 
+  105  clear
+  106  sudo file /bin/bash
+  107  file Desktop
+  108  ls
+  109  file Desktop
+  110  pwd
+  111  cd ..
+  112  ls
+  113  cd etc/
+  114  pwd
+  115  ls
+  116  ls -al
+  117  ls -a
+  118  d
+  119  ls
+  120  cd //
+  121  cd /
+  122  cd ..
+  123  pwdn
+  124  cd 
+  125  ls
+  126  pwd
+  127  cd /tmp/
+  128  ls
+  129  cd v/
+  130  cd /
+  131  ls
+  132  cd tmp/
+  133  cd ..
+  134  cd !
+  135  cd tmp
+  136  pwd
+  137  cd etc
+  138  cd /etc
+  139  cd. . . . . .
+  140  cd ..
+  141  cd
+  142  clear
+  143  ls
+  144  cd down
+  145  cd Down;pads
+  146  cd Downloads/
+  147  mkdir temp1
+  148  ls
+  149  ls -l
+  150  ls -a
+  151  su
+  152  ls
+  153  rmdir temp1/
+  154  ls
+  155  s
+  156  d
+  157  da
+  158  d
+  159  man ls
+  160  cd Downloads/
+  161  ls
+  162  man ls > ls.txt
+  163  man
+  164  man man
+  165  ls
+  166  cat code_1.111.0-1772846623_amd64.deb 
+  167  clear
+  168  ls
+  169  cat ls.txt 
+  170  emacs
+  171  sudo apt install emacs
+  172  ls
+  173  ls -al
+  174  s
+  175  ls
+  176  ls -all
+  177  clear
+  178  gebit
+  179  clear
+  180  gedit
+  181  sudo apt install gedit
+  182  clear
+  183  ls
+  184  manu
+  185  man txt
+  186  man ls > test.txt
+  187  ls
+  188  cat test.txt
+  189  clare
+  190  claer
+  191  clear
+  192  l
+  193  ls
+  194  ls -l
+  195  clear
+  196  ls
+  197  l -a
+  198  ls -l
+  199  vi test.txt
+  200  vi test.txt 
+  201  vi
+  202  ls
+  203  rm aa
+  204  ls
+  205  vi
+  206  vi test.txt 
+  207  set nu
+  208  claer
+  209  clear
+  210  vi.exrc
+  211  vi .exrc
+  212  cat .exrc
+  213  ls -a
+  214  ls
+  215  clear
+  216  EXINIT='set nu list'
+  217  export EXINIT
+  218  vi test.txt 
+  219  vi
+  220  vi test.txt 
+  221  cat .exrc 
+  222  ls
+  223  ls -a
+  224  ls -l
+  225  chmod
+  226  chmod 664 text.tx
+  227  chmod 664 text.txt
+  228  ls
+  229  su
+  230  chmod
+  231  chmod --help
+  232  ls
+  233  cat adkl
+  234  ls
+  235  chmod adki
+  236  chmod adkl
+  237  chmod 666 adkl
+  238  ls
+  239  ls -al
+  240  chmod 663 text.txt
+  241  chmod 777 text.txt
+  242  ls
+  243  ls -a
+  244  ls -l
+  245  clear
+  246  ls -l
+  247  chmod --help
+  248  ls
+  249  chmod 487 adkl
+  250  chmod 777 adkl
+  251  ls
+  252  ls -l
+  253  ls
+  254  ls -l
+  255  ls
+  256  ls -a
+  257  ls -o
+  258  ls -
+  259  ls -l
+  260  clear
+  261  ls -l
+  262  ssh
+  263  mean ssh
+  264  clear
+  265  su
+  266  ping
+  267  ping 128.0.0.0
+  268  clear
+  269  packet
+  270  exit
+  271  omnettpp
+  272  omnetpp
+  273  clear
+  274  cd omnetpp--6.3.0
+  275  omnetpp
+  276  clear
+  277  sudo apt install omnetpp
+  278  clear
+  279  ipconfig
+  280  clear
+  281  su
+  282  ls
+  283  cat jiyou.txt 
+  284  ps -ef 
+  285  kill
+  286  ps -ef 
+  287  ps -ef | gr
+  288  ca
+  289  clear
+  290  ls
+  291  pgrep
+  292  pgrep --help
+  293  pgrep -x bash
+  294  plill
+  295  pkill
+  296  pkill -help
+  297  sleep 10
+  298  d;
+  299  d
+  300  clear
+  301  ;sadlfknfj
+  302  ;s;a
+  303  ps
+  304  p
+  305  clear
+  306  jobs
+  307  sleep 10 &
+  308  jobs
+  309  bg %q
+  310  bg %1
+  311  bg %
+  312  bf
+  313  clear
+  314  bg
+  315  dl
+  316  claear
+  317  claer
+  318  clear
+  319  ls
+  320  sleep 1000
+  321  clear
+  322  bg
+  323  bg %1
+  324  ps
+  325  no hup
+  326  nohup
+  327  ls
+  328  c
+  329  clear
+  330  ls
+  331  ls -al
+  332  ls
+  333  cd Cproject/
+  334  ls
+  335  pwd
+  336  clear
+  337  ls
+  338  cd !
+  339  cd ~
+  340  ls
+  341  cd -l
+  342  ls -l
+  343  chmod 410 adkl
+  344  ls
+  345  ls -
+  346  ls -l
+  347  chmod 510 adkl
+  348  ls -l
+  349  clear
+  350  chmod 510 adkl
+  351  ls -l
+  352  clear
+  353  gcc -o code_blue code_blue.c -lncurses
+  354  cd /
+  355  ls
+  356  ccd ~
+  357  cd ~
+  358  ls
+  359  cd code_blue/
+  360  ls
+  361  gcc -o code_blue main.c -lncureses
+  362  sudo apt install libncurses-dev
+  363  gcc -o code_blue main.c -lncurses
+  364  ./code_blue 
+  365  export LANG=ko_KR.URF-8
+  366  export LC_ALL=ko_KR.UTF-8
+  367  export LANG=ko_KR.UTF-8
+  368  ./code_blue 
+  369  sudo apt install language-pack-ko
+  370  sudo locale-gen ko_KR.UTF-8
+  371  sudo update-locale LANG=ko_KR.UTF-8
+  372  ./code_blue 
+  373  gcc -o code_blue main.c
+  374  ./code_blue 
+  375  gcc -o code_blue main.c
+  376  ./code_blue 
+  377  d'poeixt
+  378  ./code_blue ls
+  379  cd /
+  380  cd ~
+  381  sudo apt-get install language-pack-ko
+  382  sudo locale-gen ko_KR.UTF-8
+  383  sudo dpkg-reconfigure locales
+  384  local
+  385  locale
+  386  sdad
+  387  cd code_blue/
+  388  ls
+  389  ./code_blue 
+  390  cd code_blue/
+  391  ls
+  392  ./code_blue 
+  393  gcc -0 code_blue code_blue .c
+  394  gcc -o code_blue code_blue.c
+  395  ls
+  396  gcc -o code_blue main.c 
+  397  ./code_blue 
+  398  sdds
+  399  ./code_blue 
+  400  sudo apt install libncurses-d
+  401  sudo apt install libncurses-dev
+  402  make
+  403  ./code_blue 
+  404  ls
+  405  ./code_blue
+  406  make 
+  407  ./code_blue
+  408  ls
+  409  cat adkl
+  410  ls jiyou.txt 
+  411  cat
+  412  cd code_blue/
+  413  ls
+  414  cat main.
+  415  cat main.c
+  416  ls
+  417  cd /
+  418  cd !
+  419  cd ~
+  420  ls
+  421  ls -al
+  422  ls
+  423  cd code
+  424  cd codeblue_final/
+  425  ls
+  426  ls -a
+  427  ls .
+  428  cd .
+  429  cd ..
+  430  clear
+  431  ls
+  432  cd Cpr
+  433  ls
+  434  cd codeblue_final/
+  435  ls
+  436  ./maps
+  437  gcc -o code_blue main.c
+  438  clear
+  439  gcc -o code_blue main.c
+  440  ls
+  441  make
+  442  make main.c
+  443  ls
+  444  ls -a
+  445  clear
+  446  ls -l
+  447  cat player.
+  448  cat player.c
+  449  ls
+  450  clear
+  451  ls
+  452  ;lasd;lds'
+  453  f
+  454  a
+  455  ds
+  456  cd /
+  457  ls
+  458  cd ~
+  459  sudo apt update
+  460  sudo apt upgrade
+  461  ls
+  462  cd
+  463  ls
+  464  cd code_blue/
+  465  ls
+  466  ./code_blue 
+  467  ./code_blue 
+  468  cd codeblue_v3/
+  469  ex
+  470  ls
+  471  ./
+  472  ..
+  473  //
+  474  cd ..
+  475  ls
+  476  tar -xzf codeblue_v3/
+  477  tar -xzf codeblue_v3.tar.gz
+  478  ls
+  479  code
+  480  ls
+  481  cd Desktop/
+  482  ls
+  483  tar -xzf codeblue_v3.tar.gz
+  484  ls
+  485  cd codeblue_v3/
+  486  make
+  487  ./code_blue 
+  488  ls
+  489  ./code_blue 
+  490  ls
+  491  cd Downloads/
+  492  ls
+  493  cd manor
+  494  ls
+  495  ./manor
+  496  make clean
+  497  make
+  498  ./manor 
+  499  make clean
+  500  make
+  501  ./manor 
+  502  make clean
+  503  make
+  504  ./manor
+  505  [A
+  506  ./manor
+  507  make clean
+  508  make
+  509  ./manor 
+  510  make clean
+  511  make 
+  512  ./manor 
+  513  make clean
+  514  make 
+  515  ./manor 
+  516  make clean
+  517  make 
+  518  ./manor 
+  519  make clean
+  520  make 
+  521  ./manor 
+  522  grep -n "I" src/map.c
+  523  grep -n "K" src/map.c
+  524  ls
+  525  cd ..
+  526  ls
+  527  cd ..
+  528  ls
+  529  cd Downloads/
+  530  ,s
+  531  ks
+  532  ls
+  533  cd codeblue_v3
+  534  ls
+  535  ./code_blue 
+  536  ls
+  537  cdccsad
+  538  ls
+  539  cd ..
+  540  ls
+  541  cd codeblue_final/
+  542  ls
+  543  cd ..
+  544  ls
+  545  exit
+  546  cd ..
+  547  ls
+  548  cd code_blue/
+  549  ls
+  550  ./code_blue 
+  551  ls
+  552  ./manor
+  553  make
+  554  make clean
+  555  make
+  556  ls
+  557  ./manor 
+  558  make clean
+  559  make
+  560  ./manor 
+  561  make
+  562  make clean
+  563  make
+  564  kls
+  565  ls
+  566  ./manor
+  567  make
+  568  make clean
+  569  make
+  570  ./manor 
+  571  ls
+  572  make
+  573  make clean
+  574  make
+  575  clear
+  576  ls
+  577  make
+  578  make clean
+  579  make
+  580  ./manor 
+  581  make
+  582  ./manor 
+  583  make
+  584  ./manor 
+  585  make
+  586  ./manor 
+  587  ㅡ맏
+  588  make
+  589  ./
+  590  ./manor 
+  591  make
+  592  make clean
+  593  make
+  594  make clean
+  595  make
+  596  make clean
+  597  make
+  598  make clean
+  599  make
+  600  ./manor 
+  601  make clean
+  602  make
+  603  make clena
+  604  make clean
+  605  make
+  606  ./manor 
+  607  grep -rn "butler_chase" src
+  608  sed -n '185,205p' src/main.c
+  609  sed -n '215,230p' src/main.c
+  610  make
+  611  make clean
+  612  make
+  613  ./manor 
+  614  make clean
+  615  make
+  616  ./manor 
+  617  ls
+  618  cd ..
+  619  ls
+  620  cd codeblue_final/
+  621  ls
+  622  df -h
+  623  sudo apt clean
+  624  df -h
+  625  rm -rf ~/.local/share/Trash/*
+  626  df -h
+  627  du -sh ~/Desktop/*
+  628  du -sh ~/* 2>/dev/null | sort -hr
+  629  sudo du -xh / --max-depth=1 2>/dev/null | sort -hr
+  630  [200~sudo du -sh /var/*~
+  631  sudo du -sh /var/*
+  632  journalctl --disk-usage
+  633  sudo journalctl --vacuum-time=7D
+  634  sudo apt clean
+  635  sudo du -sh /var/log/*
+  636  sudo journalctl --vacuum-size=100M
+  637  ls
+  638  sudo truncate -s 0 /var/log/syslog
+  639  sudo truncate -s 0 /var/log/kern.log
+  640  sudo du -sh /var/log/*
+  641  jiyou@jiyou-VirtualBox:~/Desktop/codeblue_final$ sudo du -sh /var/log/*
+  642  0	/var/log/README
+  643  0	/var/log/alternatives.log
+  644  4.0K	/var/log/alternatives.log.1
+  645  4.0K	/var/log/alternatives.log.2.gz
+  646  4.0K	/var/log/apport.log
+  647  4.0K	/var/log/apport.log.1
+  648  4.0K	/var/log/apport.log.2.gz
+  649  4.0K	/var/log/apport.log.3.gz
+  650  4.0K	/var/log/apport.log.4.gz
+  651  136K	/var/log/apt
+  652  52K	/var/log/auth.log
+  653  8.0K	/var/log/auth.log.1
+  654  8.0K	/var/log/auth.log.2.gz
+  655  sudo du -xh / --max-depth=1 2>/dev/null | sort -hr
+  656  sudo du -xh /var --max-depth=1 2>/dev/null | sort -hr
+  657  sudo reboot
+  658  ls -la src/main*
+  659  ㅣㄴ
+  660  ls
+  661  cd Desktop/
+  662  ls
+  663  cd manor/
+  664  ls -la src/main*
+  665  git status
+  666  find ~ -name "main.c*" 2>/dev/null
+  667  history | grep "sed -n"
+  668  history > history.txt
