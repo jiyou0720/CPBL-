@@ -68,8 +68,8 @@ static const PuzzleDef DEFS[7] = {
         "a, b, c, d를 구하시오.",
         "a + b = c",
         "c + d = 10",
-        "d = a + 2",
-        "b × d = 24",
+        "d = a",
+        "b × d = 12",
         NULL
     },
 

@@ -4,8 +4,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include "bgm.h"
 #include "state.h"
 #include "intro.h"
+#include "ending.h"
 #include "map.h"
 #include "render.h"
 #include "player.h"
@@ -29,7 +31,7 @@ static int check_terminal_size(void) {
 
 static void ncurses_init(void) {
     setlocale(LC_ALL, "ko_KR.UTF-8");
-    initscr(); cbreak(); noecho();
+    initscr(); bgm_init(); cbreak(); noecho();
     keypad(stdscr, TRUE); curs_set(0);
     nodelay(stdscr, TRUE); set_escdelay(25);
 }
@@ -125,16 +127,17 @@ static int show_start_menu(void) {
                 mvprintw(4,30,"=== CREDIT ===");
                 attroff(COLOR_PAIR(CP_DANGER)|A_BOLD);
 
-                mvprintw(7,25,"게임명 : 저택의 실체");
-                mvprintw(8,25,"팀명 : Team NOTE");
+                mvprintw(7,25,"게임명 : CODE BLUE");
+                mvprintw(8,25,"팀명 : 2팀_NOTE");
 
                 mvprintw(11,25,"박지유");
                 mvprintw(12,25,"조은서");
                 mvprintw(13,25,"오유선");
                 mvprintw(14,25,"신주연");
 
-                mvprintw(17,25,"개발환경 : C / ncurses");
-                mvprintw(18,25,"개발기간 : 2026");
+                mvprintw(17,25,"개발환경 : C");
+                mvprintw(18,25,"개발기간 : 2026-1");
+                mvprintw(19,25,"수업: C응용프로젝트 PBL");
 
                 mvprintw(22,25,"[아무 키] 메뉴로 돌아가기");
 
@@ -186,6 +189,7 @@ static void resolve_ghost_dialog(GameState *gs, int choice){
     } else {
         gs->ghost_safe_streak=0;
         if(gs->dialog.instant_ko[1]){
+            sfx_play("assets/death.wav");
             gs->mode=MODE_ENDING_BAD; gs->achieve[2]=1;
             memset(&gs->dialog,0,sizeof(gs->dialog)); return;
         }
@@ -261,28 +265,58 @@ static void handle_input(GameState *gs, int ch){
             break;
         }
         switch(ch){
-        case ' ':case '\n':case '\r':{
-            int sel=gs->dialog.choice_sel;
-            if(gs->active_npc_id==99){
-                if(gs->dialog.choice_count>0&&sel==0){
+        case ' ':
+        case '\n':
+        case '\r':
+        {
+            int sel = gs->dialog.choice_sel;
 
-                    ranking_add(gs);   /* 랭킹 등록 */
+            if(gs->active_npc_id == 99)
+            {
+                if(gs->dialog.choice_count > 0 && sel == 0)
+                {
+                    /* 성수 사용 */
+                    sfx_play("assets/holy.wav");
+                    napms(1500);
 
-                    gs->ending_page = 0;
-                    gs->mode = MODE_ENDING_HAPPY;
+                    /* 망치 사용 */
+                    sfx_play("assets/hammer.wav");
+
                     gs->achieve[3] = 1;
 
                     if(!gs->butler_chase)
                         gs->achieve[10] = 1;
+
+                    gs->ending_page = 0;
+
+                    /* 엔딩 크레딧 음악 */
+                    bgm_play("assets/credit.wav");
+
+                    show_happy_ending(gs);
+
+                    ranking_add(gs);
+
+                    gs->mode = MODE_ENDING_HAPPY;
                 }
-                else {
+                else
+                {
                     gs->mode = MODE_MAP;
-                    memset(&gs->dialog,0,sizeof(gs->dialog));
+                    memset(&gs->dialog, 0, sizeof(gs->dialog));
                 }
-                } else if(gs->active_npc_id>=1&&gs->active_npc_id<=MAX_GHOSTS){
-                resolve_ghost_dialog(gs,sel);
-            } else {gs->mode=MODE_MAP;memset(&gs->dialog,0,sizeof(gs->dialog));}
-            break;}
+            }
+            else if(gs->active_npc_id >= 1 &&
+                    gs->active_npc_id <= MAX_GHOSTS)
+            {
+                resolve_ghost_dialog(gs, sel);
+            }
+            else
+            {
+                gs->mode = MODE_MAP;
+                memset(&gs->dialog, 0, sizeof(gs->dialog));
+            }
+
+            break;
+        }
         case KEY_UP:case 'w':case 'W':
             if(gs->dialog.choice_sel>0) gs->dialog.choice_sel--;
             break;
@@ -305,11 +339,32 @@ static void handle_input(GameState *gs, int ch){
         break;
     case MODE_GAMEOVER:
         switch(ch){
-        case 'r':case 'R':state_init(gs);notes_init();puzzle_init();enemy_init();show_achieve=0;break;
-        case 'l':case 'L':load_game(gs,0);enemy_init();break;
-        case 'q':case 'Q':gs->running=0;break;
-        }
-        break;
+        case 'r':
+        case 'R':
+
+            /* 완전 새 게임 */
+
+            remove("data/save.dat");   // 자동저장 제거
+            remove("save.dat");        // 혹시 루트에도 있으면 제거
+
+            map_init();
+
+            state_init(gs);
+
+            /* 혹시 몰라서 명시 초기화 */
+            gs->butler_chase = 0;
+            gs->butler_phase = 0;
+            gs->butler_start_time = 0;
+
+            enemy_init();
+            puzzle_init();
+            notes_init();
+
+            break;
+                case 'l':case 'L':load_game(gs,0);enemy_init();break;
+                case 'q':case 'Q':gs->running=0;break;
+                }
+                break;
     case MODE_ENDING_HAPPY:
 
         if((ch=='\n' || ch=='\r') && gs->ending_page == 0)
@@ -330,7 +385,14 @@ static void handle_input(GameState *gs, int ch){
 
         if(ch=='r' || ch=='R')
         {
+            map_init();
             state_init(gs);
+
+            enemy_init();
+            puzzle_init();
+            notes_init();
+
+            gs->mode = MODE_MAP;
         }
         else if(ch=='q' || ch=='Q')
         {

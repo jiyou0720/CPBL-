@@ -2,6 +2,7 @@
 #include "map.h"
 #include "save.h"
 #include "notes.h"
+#include "bgm.h"
 #include "puzzle.h"
 #include <string.h>
 
@@ -103,8 +104,8 @@ void player_move(GameState *gs, int dx, int dy)
     /* 계단 */
     if (tile == T_STAIRS_U) {
         gs->floor = 2;
-        gs->px = 11;
-        gs->py = 16;
+        gs->px = 21;
+        gs->py = 2;
         state_set_msg(gs, "2층으로 올라갔습니다.");
         autosave(gs);
         return;
@@ -310,47 +311,64 @@ void player_interact(GameState *gs) {
             gs->mode = MODE_EVENT;
             gs->active_npc_id = 99;
 
-            if (has_holy && has_hammer) {
+            if (has_holy && has_hammer)
+            {
                 /* 해피엔딩 */
                 gs->dialog.line_count = 3;
+
                 strncpy(gs->dialog.lines[0],
                     "성수를 보석에 붓습니다.",
-                    MAX_DIALOG_LEN-1);
+                    MAX_DIALOG_LEN - 1);
+
                 strncpy(gs->dialog.lines[1],
                     "보석이 흔들리며 금이 갑니다. 망치를 들어올립니다 --",
-                    MAX_DIALOG_LEN-1);
+                    MAX_DIALOG_LEN - 1);
+
                 strncpy(gs->dialog.lines[2],
                     "[Enter를 눌러 핵을 파괴하세요]",
-                    MAX_DIALOG_LEN-1);
+                    MAX_DIALOG_LEN - 1);
+
                 gs->dialog.choice_count = 1;
-                strncpy(gs->dialog.choices[0], "핵을 파괴한다!", 63);
+
+                strncpy(gs->dialog.choices[0],
+                    "핵을 파괴한다!",
+                    63);
+
                 gs->dialog.hp_penalty[0] = 0;
                 gs->dialog.instant_ko[0] = 0;
-                /* handle_input에서 선택 확인 후 MODE_ENDING_HAPPY로 전환 */
-                /* active_npc_id=99 + choice 선택 시 main에서 처리 */
-            } else if (!has_holy) {
+            }
+            else if (!has_holy)
+            {
                 gs->dialog.line_count = 2;
+
                 strncpy(gs->dialog.lines[0],
                     "보석이 붉게 맥동합니다. 망치는 효과가 없습니다.",
-                    MAX_DIALOG_LEN-1);
+                    MAX_DIALOG_LEN - 1);
+
                 strncpy(gs->dialog.lines[1],
                     "먼저 성수로 약하게 만들어야 합니다.",
-                    MAX_DIALOG_LEN-1);
-                gs->dialog.choice_count = 0;
-            } else { /* has_holy but no hammer */
-                gs->dialog.line_count = 2;
-                strncpy(gs->dialog.lines[0],
-                    "성수를 붓습니다. 보석이 깜빡입니다 --",
-                    MAX_DIALOG_LEN-1);
-                strncpy(gs->dialog.lines[1],
-                    "하지만 부술 도구가 없습니다. 망치를 찾아야 합니다!",
-                    MAX_DIALOG_LEN-1);
+                    MAX_DIALOG_LEN - 1);
+
                 gs->dialog.choice_count = 0;
             }
+            else    /* has_holy but no hammer */
+            {
+                gs->dialog.line_count = 2;
+
+                strncpy(gs->dialog.lines[0],
+                    "성수를 붓습니다. 보석이 깜빡입니다 --",
+                    MAX_DIALOG_LEN - 1);
+
+                strncpy(gs->dialog.lines[1],
+                    "하지만 부술 도구가 없습니다. 망치를 찾아야 합니다!",
+                    MAX_DIALOG_LEN - 1);
+
+                gs->dialog.choice_count = 0;
+            }
+
             return;
         }
     }
-
     state_set_msg(gs, "여기에는 상호작용할 대상이 없습니다.");
 }
 

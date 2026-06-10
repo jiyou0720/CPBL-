@@ -61,13 +61,38 @@ char map2f[MAP_ROWS][MAP_COLS+1] = {
 "##############################################################################",
 "##############################################################################",
 };
-void map_init(void) {
+
+static char map1f_original[MAP_ROWS][MAP_COLS+1];
+static char map2f_original[MAP_ROWS][MAP_COLS+1];
+void map_init(void)
+{
+    static int initialized = 0;
+
+    if (!initialized) {
+
+        memcpy(map1f_original, map1f, sizeof(map1f));
+        memcpy(map2f_original, map2f, sizeof(map2f));
+
+        initialized = 1;
+    }
+
+    memcpy(map1f, map1f_original, sizeof(map1f));
+    memcpy(map2f, map2f_original, sizeof(map2f));
+
     for (int y = 0; y < MAP_ROWS; y++) {
-        int len = (int)strlen(map1f[y]);
-        for (int x = len; x < MAP_COLS; x++) map1f[y][x] = ' ';
+
+        int len = strlen(map1f[y]);
+
+        for (int x = len; x < MAP_COLS; x++)
+            map1f[y][x] = ' ';
+
         map1f[y][MAP_COLS] = '\0';
-        len = (int)strlen(map2f[y]);
-        for (int x = len; x < MAP_COLS; x++) map2f[y][x] = ' ';
+
+        len = strlen(map2f[y]);
+
+        for (int x = len; x < MAP_COLS; x++)
+            map2f[y][x] = ' ';
+
         map2f[y][MAP_COLS] = '\0';
     }
 }

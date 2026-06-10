@@ -1,6 +1,6 @@
 CC      = gcc
 CFLAGS  = -Wall -Wextra -std=c11 -g -I src
-LIBS    = -lncursesw
+LIBS = -lncursesw -lSDL2 -lSDL2_mixer
 TARGET  = manor
 SRCDIR  = src
 SRCS    = $(SRCDIR)/main.c    \
@@ -13,6 +13,8 @@ SRCS    = $(SRCDIR)/main.c    \
           $(SRCDIR)/puzzle.c  \
           $(SRCDIR)/enemy.c   \
           $(SRCDIR)/intro.c \
+          $(SRCDIR)/ending.c \
+          $(SRCDIR)/bgm.c \
           $(SRCDIR)/ranking.c  
 OBJS    = $(SRCS:.c=.o)
 

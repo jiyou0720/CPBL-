@@ -164,8 +164,8 @@ void render_map(GameState *gs) {
         mvprintw( 2, 15, "주계단");
         mvprintw( 7, 15, "상부복도");
         mvprintw( 2, 30, "침실 2");
-        mvprintw( 7, 30, "작은방");
-        mvprintw( 7, 45, "사용인방");
+        mvprintw( 28, 30, "작은방");
+        mvprintw( 3, 45, "사용인방");
         mvprintw( 2, 60, "마스터");
         mvprintw( 3, 60, "침실스위트");
         mvprintw(12, 60, "테라스");

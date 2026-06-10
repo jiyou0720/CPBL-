@@ -1,6 +1,7 @@
 #include "enemy.h"
 #include "map.h"
 #include "render.h"
+#include "bgm.h"
 #include <string.h>
 #include <stdlib.h>
 #include <ncurses.h>
@@ -273,6 +274,7 @@ static void update_butler(GameState *gs) {
 
     /* 플레이어 접촉 → 배드엔딩 */
     if (butler.x == gs->px && butler.y == gs->py) {
+        sfx_play("assets/death.wav");
         gs->mode = MODE_ENDING_BAD;
         gs->achieve[2] = 1; /* 죽어버리다니 */
 
@@ -374,6 +376,7 @@ void butler_chase_start(GameState *gs)
     butler.detected = 1;
 
     gs->butler_chase = 1;
+    sfx_play("assets/butler.wav");
     gs->butler_start_time = time(NULL);
 
     state_set_msg(gs,

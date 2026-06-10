@@ -2,23 +2,38 @@
 #include <string.h>
 #include <stdio.h>
 
-void state_init(GameState *gs) {
+// void state_init(GameState *gs) {
+//     memset(gs, 0, sizeof(GameState));
+
+//     gs->mode      = MODE_MAP;
+//     gs->floor     = 1;
+//     gs->px        = 3;
+//     gs->py        = 3;
+//     gs->hp        = HP_MAX;
+//     gs->running   = 1;
+//     gs->start_time = time(NULL);
+
+//     gs->ending_page = 0;   // 추가
+
+//     for (int i = 0; i < MAX_PUZZLES; i++)
+//         gs->puzzle_first_try[i] = 1;
+// }
+void state_init(GameState *gs)
+{
     memset(gs, 0, sizeof(GameState));
 
-    gs->mode      = MODE_MAP;
-    gs->floor     = 1;
-    gs->px        = 3;
-    gs->py        = 3;
-    gs->hp        = HP_MAX;
-    gs->running   = 1;
+    gs->mode = MODE_MAP;
+    gs->running = 1;
+
+    gs->floor = 1;
+    gs->px = 2;
+    gs->py = 2;
+
+    gs->hp = HP_MAX;
+
     gs->start_time = time(NULL);
-
-    gs->ending_page = 0;   // 추가
-
-    for (int i = 0; i < MAX_PUZZLES; i++)
-        gs->puzzle_first_try[i] = 1;
+    gs->ending_page = 0;
 }
-
 int state_has_item(GameState *gs, int item_id) {
     for (int i = 0; i < gs->item_count; i++)
         if (gs->items[i] == item_id) return 1;
